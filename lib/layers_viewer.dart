@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:image_editor_with_effects/data/layer.dart';
+import 'package:image_editor_with_effects/data/overlay_layer.dart';
 import 'package:image_editor_with_effects/layers/background_blur_layer.dart';
 import 'package:image_editor_with_effects/layers/background_layer.dart';
 import 'package:image_editor_with_effects/layers/emoji_layer.dart';
 import 'package:image_editor_with_effects/layers/image_layer.dart';
 import 'package:image_editor_with_effects/layers/link_layer.dart';
+import 'package:image_editor_with_effects/layers/overlay_widget_layer.dart';
 import 'package:image_editor_with_effects/layers/text_layer.dart';
 
 /// View stacked layers (unbounded height, width)
@@ -76,6 +78,15 @@ class LayersViewer extends StatelessWidget {
             layerData: layerItem,
             onUpdate: onUpdate,
             editable: editable,
+          );
+        }
+
+        // Overlay layer
+        if (layerItem is OverlayLayerData) {
+          return OverlayLayer(
+            layerData: layerItem,
+            onUpdate: onUpdate,
+            // editable: editable,
           );
         }
 

@@ -108,3 +108,11 @@ class ImagePickerOption {
     this.maxLength = 99,
   });
 }
+
+class OverlayOption {
+  final bool enabled;
+  
+  const OverlayOption({
+    this.enabled = true,
+  });
+}
