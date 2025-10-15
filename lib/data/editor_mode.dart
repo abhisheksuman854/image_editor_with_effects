@@ -1,0 +1,1 @@
+enum EditorMode { brush, filter }
