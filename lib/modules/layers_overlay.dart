@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_editor_with_effects/data/layer.dart';
+import 'package:image_editor_with_effects/data/overlay_layer.dart';
 import 'package:image_editor_with_effects/image_editor_with_effects.dart';
 import 'package:image_editor_with_effects/modules/emoji_layer_overlay.dart';
 import 'package:image_editor_with_effects/modules/image_layer_overlay.dart';
@@ -98,10 +99,16 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
                                           height: 40,
                                         ),
                                       )
-                                    : const Text(
-                                        '',
-                                        style: TextStyle(color: Colors.white),
-                                      ))),
+                                      :(layer is OverlayLayerData
+    ? Icon(
+        Icons.category,
+        size: 32,
+        color: Colors.white,
+      )
+    : const Text(
+        '',
+        style: TextStyle(color: Colors.white),
+      )))),
                   ),
                 ),
                 SizedBox(

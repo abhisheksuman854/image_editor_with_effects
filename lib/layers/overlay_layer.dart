@@ -21,7 +21,6 @@ class OverlayLayer extends StatefulWidget {
 class _OverlayLayerState extends State<OverlayLayer> {
   double baseScaleFactor = 1;
   double baseAngle = 0;
-  Offset baseOffset = Offset.zero;
 
   @override
   void initState() {
@@ -53,19 +52,18 @@ class _OverlayLayerState extends State<OverlayLayer> {
                 ? (details) {
                     baseScaleFactor = widget.layerData.scale;
                     baseAngle = widget.layerData.rotation;
-                    baseOffset = widget.layerData.offset;
                   }
                 : null,
             onScaleUpdate: widget.editable
                 ? (details) {
                     setState(() {
-                      // Handle dragging (1 finger) - when scale is 1.0
-                      if (details.scale == 1.0) {
+                      // Handle dragging (1 finger)
+                      if (details.pointerCount == 1) {
                         widget.layerData.offset = Offset(
-                          baseOffset.dx + details.focalPointDelta.dx,
-                          baseOffset.dy + details.focalPointDelta.dy,
+                          widget.layerData.offset.dx + details.focalPointDelta.dx,
+                          widget.layerData.offset.dy + details.focalPointDelta.dy,
                         );
-                      } else {
+                      } else if (details.pointerCount == 2) {
                         // Handle scaling and rotation (2 fingers)
                         widget.layerData.scale =
                             baseScaleFactor * details.scale;
