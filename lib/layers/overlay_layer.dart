@@ -21,6 +21,7 @@ class OverlayLayer extends StatefulWidget {
 class _OverlayLayerState extends State<OverlayLayer> {
   double baseScaleFactor = 1;
   double baseAngle = 0;
+  Offset baseOffset = Offset.zero;
 
   @override
   void initState() {
@@ -47,36 +48,30 @@ class _OverlayLayerState extends State<OverlayLayer> {
                   }
                 : null,
 
-            // Scale and rotate with two fingers
+            // Use only scale gesture recognizer for all interactions
             onScaleStart: widget.editable
                 ? (details) {
                     baseScaleFactor = widget.layerData.scale;
                     baseAngle = widget.layerData.rotation;
+                    baseOffset = widget.layerData.offset;
                   }
                 : null,
             onScaleUpdate: widget.editable
                 ? (details) {
-                    // Only update if it's actually a scale/rotate gesture (2 fingers)
-                    if (details.scale != 1.0 || details.rotation != 0.0) {
-                      setState(() {
+                    setState(() {
+                      // Handle dragging (1 finger) - when scale is 1.0
+                      if (details.scale == 1.0) {
+                        widget.layerData.offset = Offset(
+                          baseOffset.dx + details.focalPointDelta.dx,
+                          baseOffset.dy + details.focalPointDelta.dy,
+                        );
+                      } else {
+                        // Handle scaling and rotation (2 fingers)
                         widget.layerData.scale =
                             baseScaleFactor * details.scale;
                         widget.layerData.rotation =
                             baseAngle + details.rotation;
-                      });
-                      widget.onUpdate?.call();
-                    }
-                  }
-                : null,
-
-            // Pan (drag) with one finger
-            onPanUpdate: widget.editable
-                ? (details) {
-                    setState(() {
-                      widget.layerData.offset = Offset(
-                        widget.layerData.offset.dx + details.delta.dx,
-                        widget.layerData.offset.dy + details.delta.dy,
-                      );
+                      }
                     });
                     widget.onUpdate?.call();
                   }
