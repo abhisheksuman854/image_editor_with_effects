@@ -829,6 +829,8 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       text: i18n('Crop'),
                       onTap: () async {
                         resetTransformation();
+                        if (!mounted) return;
+
                         var loadingScreen = showLoadingScreen(context);
                         var mergedImage = await getMergedImage();
                         loadingScreen.hide();
@@ -846,13 +848,16 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                           ),
                         );
 
-                        if (croppedImage == null) return;
+                        if (croppedImage == null || !mounted) return;
 
                         flipValue = 0;
                         rotateValue = 0;
 
                         await currentImage.load(croppedImage);
-                        setState(() {});
+
+                        if (mounted) {
+                          setState(() {});
+                        }
                       },
                     ),
                   if (widget.brushOption != null)
@@ -860,58 +865,34 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       icon: Icons.edit,
                       text: i18n('Brush'),
                       onTap: () async {
-                        if (widget.brushOption!.translatable) {
-                          var drawing = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ImageEditorDrawing(
-                                image: currentImage,
-                                options: widget.brushOption!,
-                              ),
+                        // Always create as a separate layer for consistency
+                        var drawing = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ImageEditorDrawing(
+                              image: currentImage,
+                              options: widget.brushOption!,
+                            ),
+                          ),
+                        );
+
+                        if (drawing != null && mounted) {
+                          undoLayers.clear();
+                          removedLayers.clear();
+
+                          // Always add as a new layer
+                          layers.add(
+                            ImageLayerData(
+                              image: ImageItem(drawing),
+                              offset: const Offset(0, 0),
                             ),
                           );
 
-                          if (drawing != null) {
-                            undoLayers.clear();
-                            removedLayers.clear();
-
-                            layers.add(
-                              ImageLayerData(
-                                image: ImageItem(drawing),
-                                offset: Offset(
-                                  -currentImage.width / 4,
-                                  -currentImage.height / 4,
-                                ),
-                              ),
-                            );
-
-                            setState(() {});
-                          }
-                        } else {
-                          resetTransformation();
-                          var loadingScreen = showLoadingScreen(context);
-                          var mergedImage = await getMergedImage();
-                          loadingScreen.hide();
-
-                          if (!mounted) return;
-
-                          var drawing = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ImageEditorDrawing(
-                                image: ImageItem(mergedImage!),
-                                options: widget.brushOption!,
-                              ),
-                            ),
-                          );
-
-                          if (drawing != null) {
-                            currentImage.load(drawing);
-                            setState(() {});
-                          }
+                          setState(() {});
                         }
                       },
                     ),
+
                   if (widget.textOption != null)
                     BottomButton(
                       icon: Icons.text_fields,
@@ -1177,6 +1158,8 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       onTap: () async {
                         resetTransformation();
 
+                        if (!mounted) return;
+
                         var loadingScreen = showLoadingScreen(context);
                         var mergedImage = await getMergedImage();
                         loadingScreen.hide();
@@ -1193,7 +1176,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                           ),
                         );
 
-                        if (filterAppliedImage == null) return;
+                        if (filterAppliedImage == null || !mounted) return;
 
                         removedLayers.clear();
                         undoLayers.clear();
@@ -1206,7 +1189,9 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                         await layer.image.loader.future;
 
-                        setState(() {});
+                        if (mounted) {
+                          setState(() {});
+                        }
                       },
                     ),
                   if (widget.emojiOption != null)
@@ -1861,27 +1846,41 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               icon: const Icon(Icons.check),
               onPressed: () async {
-                if (control.paths.isEmpty) return Navigator.pop(context);
+                if (control.paths.isEmpty) {
+                  if (mounted) Navigator.pop(context);
+                  return;
+                }
 
-                if (widget.options.translatable) {
-                  var data = await control.toImage(
-                    color: currentColor,
-                    height: widget.image.height,
-                    width: widget.image.width,
-                  );
+                try {
+                  if (widget.options.translatable) {
+                    var data = await control.toImage(
+                      color: currentColor,
+                      background:
+                          Colors.transparent, // Make background transparent
+                      height: widget.image.height,
+                      width: widget.image.width,
+                    );
+
+                    if (mounted && data != null) {
+                      Navigator.pop(context, data.buffer.asUint8List());
+                    }
+                    return;
+                  }
 
                   if (!mounted) return;
 
-                  return Navigator.pop(context, data!.buffer.asUint8List());
+                  var loadingScreen = showLoadingScreen(context);
+                  var image = await screenshotController.capture();
+                  loadingScreen.hide();
+
+                  if (mounted && image != null) {
+                    Navigator.pop(context, image);
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
                 }
-
-                var loadingScreen = showLoadingScreen(context);
-                var image = await screenshotController.capture();
-                loadingScreen.hide();
-
-                if (!mounted) return;
-
-                return Navigator.pop(context, image);
               },
             ),
           ],

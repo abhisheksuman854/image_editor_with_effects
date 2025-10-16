@@ -45,54 +45,54 @@ class _OverlayLayerOverlayState extends State<OverlayLayerOverlay> {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Shape selector (for both shape and image overlays)
             const Text(
               'Shape',
               style: TextStyle(color: Colors.white, fontSize: 14),
             ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: OverlayShape.values.map((shape) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        widget.layerData.shape = shape;
-                      });
-                      widget.onUpdate();
-                    },
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: OverlayShape.values.map((shape) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      widget.layerData.shape = shape;
+                    });
+                    widget.onUpdate();
+                  },
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: widget.layerData.shape == shape
+                          ? Colors.white24
+                          : Colors.white10,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
                         color: widget.layerData.shape == shape
-                            ? Colors.white24
-                            : Colors.white10,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: widget.layerData.shape == shape
-                              ? Colors.white
-                              : Colors.white30,
-                          width: 2,
-                        ),
-                      ),
-                      child: CustomPaint(
-                        painter: OverlayShapePainter(
-                          color: Colors.white,
-                          shape: shape,
-                          editable: false,
-                        ),
+                            ? Colors.white
+                            : Colors.white30,
+                        width: 2,
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-              
-              // Color picker (only for shape overlays)
-              if (widget.layerData.overlayType == OverlayType.shape) ...[
+                    child: CustomPaint(
+                      painter: OverlayShapePainter(
+                        color: Colors.white,
+                        shape: shape,
+                        editable: false,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            // Color picker (only for shape overlays)
+            if (widget.layerData.overlayType == OverlayType.shape) ...[
               const Text(
                 'Color',
                 style: TextStyle(color: Colors.white, fontSize: 14),
@@ -154,7 +154,7 @@ class _OverlayLayerOverlayState extends State<OverlayLayerOverlay> {
               ),
               const SizedBox(height: 20),
             ],
-            
+
             // Opacity slider
             const Text(
               'Opacity',
@@ -189,7 +189,7 @@ class _OverlayLayerOverlayState extends State<OverlayLayerOverlay> {
               ],
             ),
             const SizedBox(height: 10),
-            
+
             // Size slider
             const Text(
               'Size',
@@ -224,7 +224,7 @@ class _OverlayLayerOverlayState extends State<OverlayLayerOverlay> {
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Instructions
             Container(
               padding: const EdgeInsets.all(12),

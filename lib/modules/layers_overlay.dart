@@ -99,16 +99,18 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
                                           height: 40,
                                         ),
                                       )
-                                      :(layer is OverlayLayerData
-    ? Icon(
-        Icons.category,
-        size: 32,
-        color: Colors.white,
-      )
-    : const Text(
-        '',
-        style: TextStyle(color: Colors.white),
-      )))),
+                                    : (layer is OverlayLayerData
+                                          ? Icon(
+                                              Icons.category,
+                                              size: 32,
+                                              color: Colors.white,
+                                            )
+                                          : const Text(
+                                              '',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            )))),
                   ),
                 ),
                 SizedBox(

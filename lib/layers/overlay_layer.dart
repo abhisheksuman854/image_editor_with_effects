@@ -61,8 +61,10 @@ class _OverlayLayerState extends State<OverlayLayer> {
                       // Handle dragging (1 finger)
                       if (details.pointerCount == 1) {
                         widget.layerData.offset = Offset(
-                          widget.layerData.offset.dx + details.focalPointDelta.dx,
-                          widget.layerData.offset.dy + details.focalPointDelta.dy,
+                          widget.layerData.offset.dx +
+                              details.focalPointDelta.dx,
+                          widget.layerData.offset.dy +
+                              details.focalPointDelta.dy,
                         );
                       } else if (details.pointerCount == 2) {
                         // Handle scaling and rotation (2 fingers)
@@ -166,10 +168,12 @@ class _CircleClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     return Path()
-      ..addOval(Rect.fromCircle(
-        center: Offset(size.width / 2, size.height / 2),
-        radius: size.width / 2,
-      ))
+      ..addOval(
+        Rect.fromCircle(
+          center: Offset(size.width / 2, size.height / 2),
+          radius: size.width / 2,
+        ),
+      )
       ..close();
   }
 
@@ -181,10 +185,12 @@ class _RoundedRectangleClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     return Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Radius.circular(size.width * 0.2),
-      ))
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Radius.circular(size.width * 0.2),
+        ),
+      )
       ..close();
   }
 
