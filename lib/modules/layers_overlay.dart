@@ -26,12 +26,11 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
 
   // Helper method to build layer preview
   Widget _buildLayerPreview(Layer layer) {
-    print('layer type: ${layer.runtimeType}');
     if (layer is LinkLayerData) {
       return const Icon(Icons.link, size: 32, color: Colors.white);
     } else if (layer is TextLayerData) {
       return Text(
-        'A',
+        'T',
         style: const TextStyle(
           fontSize: 32,
           color: Colors.white,
@@ -68,9 +67,6 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
         ),
       );
     } else if (layer is OverlayLayerData) {
-      // Show overlay image preview
-      debugPrint('Overlay image bytes: ${layer.overlayImage?.bytes.length}');
-      print('Overlay image bytes: ${layer.overlayImage?.bytes.length}');
       if (layer.overlayImage != null) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),

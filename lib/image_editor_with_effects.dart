@@ -872,48 +872,31 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       },
                     ),
                   if (widget.brushOption != null)
-                    BottomButton(
-                      icon: Icons.edit,
-                      text: i18n('Brush'),
-                      onTap: () async {
-                        if (!mounted) return;
+  BottomButton(
+    icon: Icons.edit,
+    text: i18n('Brush'),
+    onTap: () async {
+      if (!mounted) return;
 
-                        Uint8List? drawing = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ImageEditorDrawing(
-                              image: currentImage,
-                              options: widget.brushOption!,
-                            ),
-                          ),
-                        );
+      BrushLayerData? brushLayer = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ImageEditorDrawing(
+            image: currentImage,
+            options: widget.brushOption!,
+          ),
+        ),
+      );
 
-                        if (!mounted) return;
+      if (!mounted || brushLayer == null) return;
 
-                        if (drawing != null) {
-                          undoLayers.clear();
-                          removedLayers.clear();
+      undoLayers.clear();
+      removedLayers.clear();
 
-                          // Create a new ImageItem from the drawing
-                          var drawingItem = ImageItem(drawing);
-
-                          // Wait for the image to load
-                          await drawingItem.loader.future;
-
-                          if (!mounted) return;
-
-                          // Add as a new layer
-                          layers.add(
-                            ImageLayerData(
-                              image: drawingItem,
-                              offset: const Offset(0, 0),
-                            ),
-                          );
-
-                          setState(() {});
-                        }
-                      },
-                    ),
+      layers.add(brushLayer);
+      setState(() {});
+    },
+  ),
                   if (widget.textOption != null)
                     BottomButton(
                       icon: Icons.text_fields,
@@ -1780,10 +1763,8 @@ class ImageEditorDrawing extends StatefulWidget {
 }
 
 class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
-  Color pickerColor = Colors.white,
-      currentColor = Colors.white,
-      currentBackgroundColor = Colors.black;
-  var screenshotController = ScreenshotController();
+  Color currentColor = Colors.white;
+  Color currentBackgroundColor = Colors.black;
 
   final control = HandSignatureControl(
     initialSetup: SignaturePathSetup(
@@ -1795,12 +1776,10 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
 
   List<CubicPath> undoList = [];
   bool skipNextEvent = false;
-  bool isProcessing = false; // Add this flag
 
   void changeColor(o.BrushColor color) {
     currentColor = color.color;
     currentBackgroundColor = color.background;
-
     setState(() {});
   }
 
@@ -1841,9 +1820,7 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               icon: const Icon(Icons.clear),
               onPressed: () {
-                if (!isProcessing) {
-                  Navigator.pop(context);
-                }
+                Navigator.pop(context);
               },
             ),
             const Spacer(),
@@ -1856,7 +1833,7 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                     : Colors.white.withAlpha(80),
               ),
               onPressed: () {
-                if (control.paths.isEmpty || isProcessing) return;
+                if (control.paths.isEmpty) return;
                 skipNextEvent = true;
                 undoList.add(control.paths.last);
                 control.stepBack();
@@ -1874,8 +1851,7 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                     : Colors.white.withAlpha(80),
               ),
               onPressed: () {
-                if (undoList.isEmpty || isProcessing) return;
-
+                if (undoList.isEmpty) return;
                 control.paths.add(undoList.removeLast());
                 if (mounted) {
                   setState(() {});
@@ -1884,110 +1860,48 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
             ),
             IconButton(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              icon: isProcessing
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.check),
-              onPressed: isProcessing
-                  ? null
-                  : () async {
-                      // If no drawing, just go back
-                      if (control.paths.isEmpty) {
-                        Navigator.pop(context);
-                        return;
-                      }
+              icon: const Icon(Icons.check),
+              onPressed: () {
+                // If no drawing, just go back
+                if (control.paths.isEmpty) {
+                  Navigator.pop(context);
+                  return;
+                }
 
-                      if (!mounted) return;
+                // Create a brush layer with the current paths
+                final brushLayer = BrushLayerData(
+                  paths: List.from(control.paths),
+                  color: currentColor,
+                  strokeWidth: 1.0,
+                  maxWidth: 7.0,
+                  offset: Offset.zero,
+                );
 
-                      setState(() {
-                        isProcessing = true;
-                      });
-
-                      try {
-                        Uint8List? imageData;
-
-                        if (widget.options.translatable) {
-                          // Create transparent background drawing
-                          final bytes = await screenshotController.capture(
-                            pixelRatio: MediaQuery.of(context).devicePixelRatio,
-                          );
-
-                          if (bytes != null) {
-                            // Convert to image with transparent background
-                            final image = img.decodeImage(bytes);
-                            if (image != null) {
-                              // Make the background color transparent
-                              for (var pixel in image) {
-                                // If pixel matches background color, make it transparent
-                                if (pixel.r == currentBackgroundColor.red &&
-                                    pixel.g == currentBackgroundColor.green &&
-                                    pixel.b == currentBackgroundColor.blue) {
-                                  pixel.a = 0;
-                                }
-                              }
-                              imageData = Uint8List.fromList(
-                                img.encodePng(image),
-                              );
-                            } else {
-                              imageData = bytes;
-                            }
-                          }
-                        } else {
-                          // Include background image
-                          imageData = await screenshotController.capture(
-                            pixelRatio: MediaQuery.of(context).devicePixelRatio,
-                          );
-                        }
-
-                        if (mounted && imageData != null) {
-                          Navigator.pop(context, imageData);
-                        } else if (mounted) {
-                          Navigator.pop(context);
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          Navigator.pop(context);
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() {
-                            isProcessing = false;
-                          });
-                        }
-                      }
-                    },
+                Navigator.pop(context, brushLayer);
+              },
             ),
           ],
         ),
-        body: Screenshot(
-          controller: screenshotController,
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            decoration: BoxDecoration(
-              color: widget.options.showBackground
-                  ? null
-                  : currentBackgroundColor,
-              image: widget.options.showBackground
-                  ? DecorationImage(
-                      image: Image.memory(widget.image.bytes).image,
-                      fit: BoxFit.contain,
-                    )
-                  : null,
-            ),
-            child: HandSignature(
-              control: control,
-              drawer: ShapeSignatureDrawer(
-                color: currentColor,
-                width: 1.0,
-                maxWidth: 7.0,
-              ),
+        body: Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            color: widget.options.showBackground
+                ? null
+                : currentBackgroundColor,
+            image: widget.options.showBackground
+                ? DecorationImage(
+                    image: Image.memory(widget.image.bytes).image,
+                    fit: BoxFit.contain,
+                  )
+                : null,
+          ),
+          child: HandSignature(
+            control: control,
+            drawer: ShapeSignatureDrawer(
+              color: currentColor,
+              width: 1.0,
+              maxWidth: 7.0,
             ),
           ),
         ),
@@ -2003,7 +1917,6 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                 ColorButton(
                   color: Colors.yellow,
                   onTap: (color) {
-                    if (isProcessing) return;
                     showModalBottomSheet(
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.only(
@@ -2059,7 +1972,6 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                   ColorButton(
                     color: color.color,
                     onTap: (color) {
-                      if (isProcessing) return;
                       currentColor = color;
                       if (mounted) {
                         setState(() {});
@@ -2075,7 +1987,6 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
     );
   }
 }
-
 /// Button used in bottomNavigationBar in ImageEditorDrawing
 class ColorButton extends StatelessWidget {
   final Color color;

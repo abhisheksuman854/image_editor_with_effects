@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:hand_signature/signature.dart';
 import 'package:image_editor_with_effects/data/image_item.dart';
 import 'package:image_editor_with_effects/data/overlay_layer.dart';
+
+// Update the LayerType enum:
+enum LayerType {
+  background,
+  image,
+  text,
+  emoji,
+  link,
+  overlay,
+  brush, // Add this
+  backgroundBlur,
+}
+
 
 /// Layer class with some common properties
 class Layer {
@@ -267,5 +281,123 @@ class BackgroundBlurLayerData extends Layer {
       'radius': radius,
       ...super.toJson(),
     };
+  }
+}
+
+// Brush Layer
+class BrushLayerData extends Layer {
+  List<CubicPath> paths;
+  Color color;
+  double strokeWidth;
+  double maxWidth;
+
+  BrushLayerData({
+    this.paths = const [],
+    this.color = Colors.white,
+    this.strokeWidth = 1.0,
+    this.maxWidth = 7.0,
+    Offset? offset,
+    double? rotation,
+    double? scale,
+    String? id,
+  }) : super(
+          offset: offset ?? Offset.zero,
+          rotation: rotation ?? 0,
+          scale: scale ?? 1,
+        );
+
+  @override
+  LayerType get type => LayerType.brush;
+
+  @override
+  Widget render() {
+    return CustomPaint(
+      painter: BrushPainter(
+        paths: paths,
+        color: color,
+        strokeWidth: strokeWidth,
+        maxWidth: maxWidth,
+      ),
+      size: Size.infinite,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'type': 'brush',
+      'paths': paths.map((path) {
+        final points = path.points;
+        return {
+          'points': points.map((p) => {
+            'x': p.dx,
+            'y': p.dy,
+            'timestamp': p.timestamp,
+          }).toList(),
+        };
+      }).toList(),
+      'color': color.value,
+      'strokeWidth': strokeWidth,
+      'maxWidth': maxWidth,
+      'offset': {'dx': offset.dx, 'dy': offset.dy},
+      'rotation': rotation,
+      'scale': scale,
+    };
+  }
+}
+
+// Brush Painter
+class BrushPainter extends CustomPainter {
+  final List<CubicPath> paths;
+  final Color color;
+  final double strokeWidth;
+  final double maxWidth;
+
+  BrushPainter({
+    required this.paths,
+    required this.color,
+    required this.strokeWidth,
+    required this.maxWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var cubicPath in paths) {
+      final points = cubicPath.points;
+      if (points.isEmpty) continue;
+
+      final paint = Paint()
+        ..color = color
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke;
+
+      for (int i = 0; i < points.length - 1; i++) {
+        final point = points[i];
+        final nextPoint = points[i + 1];
+        
+        // Calculate stroke width based on velocity
+        final distance = Offset(nextPoint.dx, nextPoint.dy).distance;
+        final timeDiff = (nextPoint.timestamp - point.timestamp).clamp(1, 1000);
+        final velocity = distance / timeDiff;
+        final width = (strokeWidth + (maxWidth - strokeWidth) * (1 - velocity.clamp(0, 1))).clamp(strokeWidth, maxWidth);
+        
+        paint.strokeWidth = width;
+        
+        canvas.drawLine(
+          Offset(point.dx, point.dy),
+          Offset(nextPoint.dx, nextPoint.dy),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(BrushPainter oldDelegate) {
+    return oldDelegate.paths != paths ||
+        oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.maxWidth != maxWidth;
   }
 }
