@@ -1,9 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:image_editor_with_effects/data/layer.dart';
+import 'package:image_editor_with_effects/data/image_item.dart';
 
 /// Enum for different overlay shapes
 enum OverlayShape { rectangle, circle, roundedRectangle, triangle, star, heart }
+
+/// Enum for overlay types
+enum OverlayType { shape, image }
 
 /// Overlay Layer Data
 class OverlayLayerData extends Layer {
@@ -11,12 +15,16 @@ class OverlayLayerData extends Layer {
   double opacityValue;
   OverlayShape shape;
   double size;
+  OverlayType overlayType;
+  ImageItem? overlayImage;
 
   OverlayLayerData({
     this.color = Colors.white,
     this.opacityValue = 0.5,
     this.shape = OverlayShape.rectangle,
     this.size = 100.0,
+    this.overlayType = OverlayType.shape,
+    this.overlayImage,
     super.offset,
     super.rotation,
     super.scale,
@@ -26,6 +34,7 @@ class OverlayLayerData extends Layer {
   Map<String, dynamic> toJson() {
     return {
       'type': 'overlay',
+      'overlayType': overlayType.index,
       'color': color.value,
       'opacity': opacity,
       'shape': shape.index,
@@ -33,17 +42,24 @@ class OverlayLayerData extends Layer {
       'offset': {'dx': offset.dx, 'dy': offset.dy},
       'rotation': rotation,
       'scale': scale,
+      'hasImage': overlayImage != null,
     };
   }
 
   /// Cycle to the next shape
   void nextShape() {
-    int nextIndex = (shape.index + 1) % OverlayShape.values.length;
-    shape = OverlayShape.values[nextIndex];
+    if (overlayType == OverlayType.shape) {
+      int nextIndex = (shape.index + 1) % OverlayShape.values.length;
+      shape = OverlayShape.values[nextIndex];
+    }
   }
 
   /// Get shape name for display
   String get shapeName {
+    if (overlayType == OverlayType.image) {
+      return 'Image Overlay';
+    }
+
     switch (shape) {
       case OverlayShape.rectangle:
         return 'Rectangle';
@@ -81,13 +97,26 @@ class OverlayWidget extends StatelessWidget {
       child: SizedBox(
         width: overlay.size,
         height: overlay.size,
-        child: CustomPaint(
-          painter: OverlayShapePainter(
-            color: overlay.color.withOpacity(overlay.opacity),
-            shape: overlay.shape,
-            editable: editable,
-          ),
-        ),
+        child:
+            overlay.overlayType == OverlayType.image &&
+                overlay.overlayImage != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Opacity(
+                  opacity: overlay.opacity,
+                  child: Image.memory(
+                    overlay.overlayImage!.bytes,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              )
+            : CustomPaint(
+                painter: OverlayShapePainter(
+                  color: overlay.color.withOpacity(overlay.opacity),
+                  shape: overlay.shape,
+                  editable: editable,
+                ),
+              ),
       ),
     );
   }

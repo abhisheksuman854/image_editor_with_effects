@@ -32,57 +32,98 @@ class _OverlayLayerState extends State<OverlayLayer> {
     return Positioned(
       left: widget.layerData.offset.dx,
       top: widget.layerData.offset.dy,
-      child: GestureDetector(
-        onTap: widget.editable
-            ? () {
-                setState(() {
-                  widget.layerData.nextShape();
-                });
-                widget.onUpdate?.call();
-              }
-            : null,
-        onScaleStart: widget.editable
-            ? (details) {
-                baseScaleFactor = widget.layerData.scale;
-                baseAngle = widget.layerData.rotation;
-              }
-            : null,
-        onScaleUpdate: widget.editable
-            ? (details) {
-                setState(() {
-                  widget.layerData.scale = baseScaleFactor * details.scale;
-                  widget.layerData.rotation = baseAngle + details.rotation;
-                });
-                widget.onUpdate?.call();
-              }
-            : null,
-        onPanUpdate: widget.editable
-            ? (details) {
-                setState(() {
-                  widget.layerData.offset = Offset(
-                    widget.layerData.offset.dx + details.delta.dx,
-                    widget.layerData.offset.dy + details.delta.dy,
-                  );
-                });
-                widget.onUpdate?.call();
-              }
-            : null,
-        child: Transform.scale(
-          scale: widget.layerData.scale,
-          child: Transform.rotate(
-            angle: widget.layerData.rotation,
+      child: Transform.scale(
+        scale: widget.layerData.scale,
+        child: Transform.rotate(
+          angle: widget.layerData.rotation,
+          child: GestureDetector(
+            // Single tap to change shape
+            onTap: widget.editable
+                ? () {
+                    setState(() {
+                      widget.layerData.nextShape();
+                    });
+                    widget.onUpdate?.call();
+                  }
+                : null,
+
+            // Scale and rotate with two fingers
+            onScaleStart: widget.editable
+                ? (details) {
+                    baseScaleFactor = widget.layerData.scale;
+                    baseAngle = widget.layerData.rotation;
+                  }
+                : null,
+            onScaleUpdate: widget.editable
+                ? (details) {
+                    // Only update if it's actually a scale/rotate gesture (2 fingers)
+                    if (details.scale != 1.0 || details.rotation != 0.0) {
+                      setState(() {
+                        widget.layerData.scale =
+                            baseScaleFactor * details.scale;
+                        widget.layerData.rotation =
+                            baseAngle + details.rotation;
+                      });
+                      widget.onUpdate?.call();
+                    }
+                  }
+                : null,
+
+            // Pan (drag) with one finger
+            onPanUpdate: widget.editable
+                ? (details) {
+                    setState(() {
+                      widget.layerData.offset = Offset(
+                        widget.layerData.offset.dx + details.delta.dx,
+                        widget.layerData.offset.dy + details.delta.dy,
+                      );
+                    });
+                    widget.onUpdate?.call();
+                  }
+                : null,
+
             child: SizedBox(
               width: widget.layerData.size,
               height: widget.layerData.size,
-              child: CustomPaint(
-                painter: OverlayShapePainter(
-                  color: widget.layerData.color.withOpacity(
-                    widget.layerData.opacity,
-                  ),
-                  shape: widget.layerData.shape,
-                  editable: widget.editable,
-                ),
-              ),
+              child:
+                  widget.layerData.overlayType == OverlayType.image &&
+                      widget.layerData.overlayImage != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Stack(
+                        children: [
+                          Opacity(
+                            opacity: widget.layerData.opacity,
+                            child: Image.memory(
+                              widget.layerData.overlayImage!.bytes,
+                              fit: BoxFit.cover,
+                              width: widget.layerData.size,
+                              height: widget.layerData.size,
+                            ),
+                          ),
+                          if (widget.editable)
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.5),
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                        ],
+                      ),
+                    )
+                  : CustomPaint(
+                      size: Size(widget.layerData.size, widget.layerData.size),
+                      painter: OverlayShapePainter(
+                        color: widget.layerData.color.withOpacity(
+                          widget.layerData.opacity,
+                        ),
+                        shape: widget.layerData.shape,
+                        editable: widget.editable,
+                      ),
+                    ),
             ),
           ),
         ),
