@@ -26,6 +26,7 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
 
   // Helper method to build layer preview
   Widget _buildLayerPreview(Layer layer) {
+    print('layer type: ${layer.runtimeType}');
     if (layer is LinkLayerData) {
       return const Icon(Icons.link, size: 32, color: Colors.white);
     } else if (layer is TextLayerData) {
