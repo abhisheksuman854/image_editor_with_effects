@@ -46,20 +46,21 @@ class OverlayLayerData extends Layer {
     };
   }
 
-  /// Cycle to the next shape
+  /// Cycle to the next shape (works for both shape and image overlays)
   void nextShape() {
-    if (overlayType == OverlayType.shape) {
-      int nextIndex = (shape.index + 1) % OverlayShape.values.length;
-      shape = OverlayShape.values[nextIndex];
-    }
+    int nextIndex = (shape.index + 1) % OverlayShape.values.length;
+    shape = OverlayShape.values[nextIndex];
   }
 
   /// Get shape name for display
   String get shapeName {
     if (overlayType == OverlayType.image) {
-      return 'Image Overlay';
+      return 'Image: ${_getShapeName()}';
     }
+    return _getShapeName();
+  }
 
+  String _getShapeName() {
     switch (shape) {
       case OverlayShape.rectangle:
         return 'Rectangle';

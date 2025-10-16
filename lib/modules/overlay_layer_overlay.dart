@@ -46,12 +46,11 @@ class _OverlayLayerOverlayState extends State<OverlayLayerOverlay> {
             ),
             const SizedBox(height: 20),
             
-            // Shape selector (only for shape overlays)
-            if (widget.layerData.overlayType == OverlayType.shape) ...[
-              const Text(
-                'Shape',
-                style: TextStyle(color: Colors.white, fontSize: 14),
-              ),
+            // Shape selector (for both shape and image overlays)
+            const Text(
+              'Shape',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 10,
@@ -93,6 +92,7 @@ class _OverlayLayerOverlayState extends State<OverlayLayerOverlay> {
               const SizedBox(height: 20),
               
               // Color picker (only for shape overlays)
+              if (widget.layerData.overlayType == OverlayType.shape) ...[
               const Text(
                 'Color',
                 style: TextStyle(color: Colors.white, fontSize: 14),
