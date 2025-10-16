@@ -31,7 +31,7 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
       return const Icon(Icons.link, size: 32, color: Colors.white);
     } else if (layer is TextLayerData) {
       return Text(
-        'T',
+        'A',
         style: const TextStyle(
           fontSize: 32,
           color: Colors.white,
