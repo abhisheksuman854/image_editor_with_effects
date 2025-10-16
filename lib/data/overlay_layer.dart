@@ -3,14 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_editor_with_effects/data/layer.dart';
 
 /// Enum for different overlay shapes
-enum OverlayShape {
-  rectangle,
-  circle,
-  roundedRectangle,
-  triangle,
-  star,
-  heart,
-}
+enum OverlayShape { rectangle, circle, roundedRectangle, triangle, star, heart }
 
 /// Overlay Layer Data
 class OverlayLayerData extends Layer {
@@ -145,7 +138,12 @@ class OverlayShapePainter extends CustomPainter {
     }
   }
 
-  void _drawRectangle(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
+  void _drawRectangle(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    Paint strokePaint,
+  ) {
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     canvas.drawRect(rect, paint);
     if (editable) canvas.drawRect(rect, strokePaint);
@@ -158,11 +156,17 @@ class OverlayShapePainter extends CustomPainter {
     if (editable) canvas.drawCircle(center, radius, strokePaint);
   }
 
-  void _drawRoundedRectangle(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
+  void _drawRoundedRectangle(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    Paint strokePaint,
+  ) {
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     final radius = Radius.circular(size.width * 0.2);
     canvas.drawRRect(RRect.fromRectAndRadius(rect, radius), paint);
-    if (editable) canvas.drawRRect(RRect.fromRectAndRadius(rect, radius), strokePaint);
+    if (editable)
+      canvas.drawRRect(RRect.fromRectAndRadius(rect, radius), strokePaint);
   }
 
   void _drawTriangle(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
@@ -210,17 +214,23 @@ class OverlayShapePainter extends CustomPainter {
 
     // Left side
     path.cubicTo(
-      width * 0.2, height * 0.1,
-      -width * 0.25, height * 0.4,
-      width / 2, height,
+      width * 0.2,
+      height * 0.1,
+      -width * 0.25,
+      height * 0.4,
+      width / 2,
+      height,
     );
 
     // Right side
     path.moveTo(width / 2, height * 0.35);
     path.cubicTo(
-      width * 0.8, height * 0.1,
-      width * 1.25, height * 0.4,
-      width / 2, height,
+      width * 0.8,
+      height * 0.1,
+      width * 1.25,
+      height * 0.4,
+      width / 2,
+      height,
     );
 
     canvas.drawPath(path, paint);

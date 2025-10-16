@@ -25,10 +25,7 @@ class _OverlayEditorImageState extends State<OverlayEditorImage> {
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Add Overlay',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Add Overlay', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
             icon: const Icon(Icons.check, color: Colors.white),
@@ -51,7 +48,8 @@ class _OverlayEditorImageState extends State<OverlayEditorImage> {
               child: GestureDetector(
                 onTap: () {
                   setState(() {
-                    int nextIndex = (currentShape.index + 1) % OverlayShape.values.length;
+                    int nextIndex =
+                        (currentShape.index + 1) % OverlayShape.values.length;
                     currentShape = OverlayShape.values[nextIndex];
                   });
                 },
@@ -81,10 +79,7 @@ class _OverlayEditorImageState extends State<OverlayEditorImage> {
                           ),
                           child: const Text(
                             'Tap to change shape',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
+                            style: TextStyle(color: Colors.white, fontSize: 12),
                           ),
                         ),
                       ),
@@ -141,15 +136,9 @@ class _OverlayEditorImageState extends State<OverlayEditorImage> {
                     copyPasteBehavior: const ColorPickerCopyPasteBehavior(
                       longPressMenu: false,
                     ),
-                    materialNameTextStyle: const TextStyle(
-                      fontSize: 0,
-                    ),
-                    colorNameTextStyle: const TextStyle(
-                      fontSize: 0,
-                    ),
-                    colorCodeTextStyle: const TextStyle(
-                      fontSize: 0,
-                    ),
+                    materialNameTextStyle: const TextStyle(fontSize: 0),
+                    colorNameTextStyle: const TextStyle(fontSize: 0),
+                    colorCodeTextStyle: const TextStyle(fontSize: 0),
                     pickersEnabled: const <ColorPickerType, bool>{
                       ColorPickerType.both: false,
                       ColorPickerType.primary: true,

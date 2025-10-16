@@ -76,7 +76,9 @@ class _OverlayLayerState extends State<OverlayLayer> {
               height: widget.layerData.size,
               child: CustomPaint(
                 painter: OverlayShapePainter(
-                  color: widget.layerData.color.withOpacity(widget.layerData.opacity),
+                  color: widget.layerData.color.withOpacity(
+                    widget.layerData.opacity,
+                  ),
                   shape: widget.layerData.shape,
                   editable: widget.editable,
                 ),

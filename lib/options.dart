@@ -111,8 +111,6 @@ class ImagePickerOption {
 
 class OverlayOption {
   final bool enabled;
-  
-  const OverlayOption({
-    this.enabled = true,
-  });
+
+  const OverlayOption({this.enabled = true});
 }

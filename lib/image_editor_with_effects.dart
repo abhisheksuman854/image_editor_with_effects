@@ -367,14 +367,14 @@ class _MultiImageEditorState extends State<MultiImageEditor> {
                                   onPressed: () async {
                                     Uint8List? editedImage =
                                         await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ImageFilters(
-                                          image: image.bytes,
-                                          options: widget.filtersOption,
-                                        ),
-                                      ),
-                                    );
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ImageFilters(
+                                              image: image.bytes,
+                                              options: widget.filtersOption,
+                                            ),
+                                          ),
+                                        );
 
                                     if (editedImage != null) {
                                       image.load(editedImage);
@@ -672,7 +672,8 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                 if (details.pointerCount == 2) {
                   if (details.horizontalScale != 1) {
-                    scaleFactor = lastScaleFactor *
+                    scaleFactor =
+                        lastScaleFactor *
                         math.min(
                           details.horizontalScale,
                           details.verticalScale,
@@ -694,10 +695,22 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       quarterTurns: rotateValue,
                       child: Transform(
                         transform: Matrix4(
-                          1, 0, 0, 0,
-                          0, 1, 0, 0,
-                          0, 0, 1, 0,
-                          x, y, 0, 1 / scaleFactor,
+                          1,
+                          0,
+                          0,
+                          0,
+                          0,
+                          1,
+                          0,
+                          0,
+                          0,
+                          0,
+                          1,
+                          0,
+                          x,
+                          y,
+                          0,
+                          1 / scaleFactor,
                         )..rotateY(flipValue),
                         alignment: FractionalOffset.center,
                         child: LayersViewer(
@@ -842,7 +855,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                         setState(() {});
                       },
                     ),
-  if (widget.brushOption != null)
+                  if (widget.brushOption != null)
                     BottomButton(
                       icon: Icons.edit,
                       text: i18n('Brush'),
@@ -1022,14 +1035,20 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                       children: [
                                         Center(
                                           child: Text(
-                                            i18n('Slider Filter Color').toUpperCase(),
-                                            style: const TextStyle(color: Colors.white),
+                                            i18n(
+                                              'Slider Filter Color',
+                                            ).toUpperCase(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(height: 20.0),
                                         Text(
                                           i18n('Slider Color'),
-                                          style: const TextStyle(color: Colors.white),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
                                         ),
                                         const SizedBox(height: 10),
                                         Row(
@@ -1043,7 +1062,9 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                                 colorListener: (int value) {
                                                   setS(() {
                                                     setState(() {
-                                                      blurLayer.color = Color(value);
+                                                      blurLayer.color = Color(
+                                                        value,
+                                                      );
                                                     });
                                                   });
                                                 },
@@ -1054,7 +1075,8 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                               onPressed: () {
                                                 setState(() {
                                                   setS(() {
-                                                    blurLayer.color = Colors.transparent;
+                                                    blurLayer.color =
+                                                        Colors.transparent;
                                                   });
                                                 });
                                               },
@@ -1064,7 +1086,9 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                         const SizedBox(height: 5.0),
                                         Text(
                                           i18n('Blur Radius'),
-                                          style: const TextStyle(color: Colors.white),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
                                         ),
                                         const SizedBox(height: 10.0),
                                         Row(
@@ -1090,7 +1114,8 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                               onPressed: () {
                                                 setS(() {
                                                   setState(() {
-                                                    blurLayer.color = Colors.white;
+                                                    blurLayer.color =
+                                                        Colors.white;
                                                   });
                                                 });
                                               },
@@ -1100,7 +1125,9 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                         const SizedBox(height: 5.0),
                                         Text(
                                           i18n('Color Opacity'),
-                                          style: const TextStyle(color: Colors.white),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
                                         ),
                                         const SizedBox(height: 10.0),
                                         Row(
@@ -1707,8 +1734,7 @@ class _FilterAppliedImageState extends State<FilterAppliedImage> {
               widget.onProcess!(result);
             }
           })
-          .catchError((err, stack) {
-          });
+          .catchError((err, stack) {});
     }
   }
 
