@@ -32,7 +32,7 @@ class _OverlayEditorImageState extends State<OverlayEditorImage> {
             onPressed: () {
               final overlay = OverlayLayerData(
                 color: selectedColor,
-                opacity: opacity,
+                opacityValue: opacity,
                 shape: currentShape,
                 size: size,
               );

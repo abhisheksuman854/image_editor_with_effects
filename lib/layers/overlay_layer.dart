@@ -71,7 +71,7 @@ class _OverlayLayerState extends State<OverlayLayer> {
           scale: widget.layerData.scale,
           child: Transform.rotate(
             angle: widget.layerData.rotation,
-            child: Container(
+            child: SizedBox(
               width: widget.layerData.size,
               height: widget.layerData.size,
               child: CustomPaint(

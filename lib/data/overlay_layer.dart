@@ -8,13 +8,13 @@ enum OverlayShape { rectangle, circle, roundedRectangle, triangle, star, heart }
 /// Overlay Layer Data
 class OverlayLayerData extends Layer {
   Color color;
-  double opacity;
+  double opacityValue;
   OverlayShape shape;
   double size;
 
   OverlayLayerData({
     this.color = Colors.white,
-    this.opacity = 0.5,
+    this.opacityValue = 0.5,
     this.shape = OverlayShape.rectangle,
     this.size = 100.0,
     super.offset,
