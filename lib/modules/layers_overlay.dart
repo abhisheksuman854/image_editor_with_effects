@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_editor_with_effects/data/layer.dart';
 import 'package:image_editor_with_effects/data/overlay_layer.dart';
-import 'package:image_editor_with_effects/image_editor_with_effects.dart';
 import 'package:image_editor_with_effects/modules/emoji_layer_overlay.dart';
 import 'package:image_editor_with_effects/modules/image_layer_overlay.dart';
 import 'package:image_editor_with_effects/modules/overlay_layer_overlay.dart';
@@ -28,11 +27,7 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
   // Helper method to build layer preview
   Widget _buildLayerPreview(Layer layer) {
     if (layer is LinkLayerData) {
-      return const Icon(
-        Icons.link,
-        size: 32,
-        color: Colors.white,
-      );
+      return const Icon(Icons.link, size: 32, color: Colors.white);
     } else if (layer is TextLayerData) {
       return Text(
         'T',
@@ -85,23 +80,12 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
         );
       } else {
         // Fallback icon if no image
-        return const Icon(
-          Icons.category,
-          size: 32,
-          color: Colors.white,
-        );
+        return const Icon(Icons.category, size: 32, color: Colors.white);
       }
     } else if (layer is BackgroundBlurLayerData) {
-      return const Icon(
-        Icons.blur_on,
-        size: 32,
-        color: Colors.white,
-      );
+      return const Icon(Icons.blur_on, size: 32, color: Colors.white);
     } else {
-      return const Text(
-        '',
-        style: TextStyle(color: Colors.white),
-      );
+      return const Text('', style: TextStyle(color: Colors.white));
     }
   }
 

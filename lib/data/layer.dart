@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_editor_with_effects/data/image_item.dart';
+import 'package:image_editor_with_effects/data/overlay_layer.dart';
 
 /// Layer class with some common properties
 class Layer {
@@ -28,6 +29,8 @@ class Layer {
         return EmojiLayerData.fromJson(json);
       case 'ImageLayer':
         return ImageLayerData.fromJson(json);
+      case 'OverlayLayer':
+        return OverlayLayerData.fromJson(json);
       case 'LinkLayer':
         return LinkLayerData.fromJson(json);
       case 'TextLayer':

@@ -31,19 +31,53 @@ class OverlayLayerData extends Layer {
   });
 
   @override
-  Map<String, dynamic> toJson() {
+  Map<dynamic, dynamic> toJson() {
     return {
-      'type': 'overlay',
+      'type': 'OverlayLayer',
       'overlayType': overlayType.index,
       'color': color.value,
-      'opacity': opacity,
+      'opacity': opacityValue,
       'shape': shape.index,
       'size': size,
       'offset': {'dx': offset.dx, 'dy': offset.dy},
       'rotation': rotation,
       'scale': scale,
       'hasImage': overlayImage != null,
+      if (overlayImage != null) 'overlayImage': overlayImage!.toJson(),
     };
+  }
+
+  static OverlayLayerData fromJson(Map<dynamic, dynamic> json) {
+    var layer = OverlayLayerData(
+      color: Color(json['color']),
+      opacityValue: json['opacity'] ?? 1.0,
+      shape: OverlayShape.values[json['shape']],
+      size: (json['size'] ?? 100.0).toDouble(),
+      overlayType: OverlayType.values[json['overlayType']],
+      overlayImage: json['hasImage'] == true && json['overlayImage'] != null
+          ? ImageItem.fromJson(json['overlayImage'])
+          : null,
+    );
+
+    // Offset data can exist as {'dx': .., 'dy': ..} or a list [dx, dy]
+    if (json['offset'] != null) {
+      if (json['offset'] is Map) {
+        layer.offset = Offset(
+          (json['offset']['dx'] ?? 0).toDouble(),
+          (json['offset']['dy'] ?? 0).toDouble(),
+        );
+      } else if (json['offset'] is List && json['offset'].length == 2) {
+        layer.offset = Offset(
+          (json['offset'][0] ?? 0).toDouble(),
+          (json['offset'][1] ?? 0).toDouble(),
+        );
+      }
+    }
+
+    layer.rotation = (json['rotation'] ?? 0).toDouble();
+    layer.scale = (json['scale'] ?? 1).toDouble();
+
+    return layer;
   }
 
   /// Cycle to the next shape (works for both shape and image overlays)
