@@ -69,6 +69,7 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
     } else if (layer is OverlayLayerData) {
       // Show overlay image preview
       debugPrint('Overlay image bytes: ${layer.overlayImage?.bytes.length}');
+      print('Overlay image bytes: ${layer.overlayImage?.bytes.length}');
       if (layer.overlayImage != null) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
