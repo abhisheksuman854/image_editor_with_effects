@@ -78,7 +78,7 @@ class OverlayWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: editable ? onTap : null,
-      child: Container(
+      child: SizedBox(
         width: overlay.size,
         height: overlay.size,
         child: CustomPaint(
@@ -165,8 +165,9 @@ class OverlayShapePainter extends CustomPainter {
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     final radius = Radius.circular(size.width * 0.2);
     canvas.drawRRect(RRect.fromRectAndRadius(rect, radius), paint);
-    if (editable)
+    if (editable) {
       canvas.drawRRect(RRect.fromRectAndRadius(rect, radius), strokePaint);
+    }
   }
 
   void _drawTriangle(Canvas canvas, Size size, Paint paint, Paint strokePaint) {

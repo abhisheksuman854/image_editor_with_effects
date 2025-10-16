@@ -53,7 +53,7 @@ class _OverlayEditorImageState extends State<OverlayEditorImage> {
                     currentShape = OverlayShape.values[nextIndex];
                   });
                 },
-                child: Container(
+                child: SizedBox(
                   width: size,
                   height: size,
                   child: Stack(
