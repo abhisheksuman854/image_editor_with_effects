@@ -100,10 +100,15 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
                                         ),
                                       )
                                     : (layer is OverlayLayerData
-                                          ? Icon(
-                                              Icons.category,
-                                              size: 32,
-                                              color: Colors.white,
+                                          ? ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: Image.memory(
+                                                layer.overlayImage!.bytes,
+                                                fit: BoxFit.cover,
+                                                width: 40,
+                                                height: 40,
+                                              ),
                                             )
                                           : const Text(
                                               '',

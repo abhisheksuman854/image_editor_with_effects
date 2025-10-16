@@ -465,6 +465,8 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
   @override
   void dispose() {
     layers.clear();
+    undoLayers.clear();
+    removedLayers.clear();
     super.dispose();
   }
 
@@ -523,16 +525,19 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                     onPressed: () async {
                       if (await Permission.photos.isPermanentlyDenied) {
                         openAppSettings();
+                        return;
                       }
 
                       var image = await picker.pickImage(
                         source: ImageSource.gallery,
                       );
 
-                      if (image == null) return;
+                      if (!mounted || image == null) return;
 
                       var imageItem = ImageItem(image);
                       await imageItem.loader.future;
+
+                      if (!mounted) return;
 
                       layers.add(ImageLayerData(image: imageItem));
                       setState(() {});
@@ -558,6 +563,8 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                       var imageItem = ImageItem(image);
                       await imageItem.loader.future;
+
+                      if (!mounted) return;
 
                       layers.add(ImageLayerData(image: imageItem));
                       setState(() {});
@@ -833,9 +840,13 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                         var loadingScreen = showLoadingScreen(context);
                         var mergedImage = await getMergedImage();
-                        loadingScreen.hide();
 
-                        if (!mounted) return;
+                        if (!mounted) {
+                          loadingScreen.hide();
+                          return;
+                        }
+
+                        loadingScreen.hide();
 
                         Uint8List? croppedImage = await Navigator.push(
                           context,
@@ -848,7 +859,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                           ),
                         );
 
-                        if (croppedImage == null || !mounted) return;
+                        if (!mounted || croppedImage == null) return;
 
                         flipValue = 0;
                         rotateValue = 0;
@@ -865,8 +876,9 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       icon: Icons.edit,
                       text: i18n('Brush'),
                       onTap: () async {
-                        // Always create as a separate layer for consistency
-                        var drawing = await Navigator.push(
+                        if (!mounted) return;
+
+                        Uint8List? drawing = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ImageEditorDrawing(
@@ -876,14 +888,24 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                           ),
                         );
 
-                        if (drawing != null && mounted) {
+                        if (!mounted) return;
+
+                        if (drawing != null) {
                           undoLayers.clear();
                           removedLayers.clear();
 
-                          // Always add as a new layer
+                          // Create a new ImageItem from the drawing
+                          var drawingItem = ImageItem(drawing);
+
+                          // Wait for the image to load
+                          await drawingItem.loader.future;
+
+                          if (!mounted) return;
+
+                          // Add as a new layer
                           layers.add(
                             ImageLayerData(
-                              image: ImageItem(drawing),
+                              image: drawingItem,
                               offset: const Offset(0, 0),
                             ),
                           );
@@ -892,12 +914,13 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                         }
                       },
                     ),
-
                   if (widget.textOption != null)
                     BottomButton(
                       icon: Icons.text_fields,
                       text: i18n('Text'),
                       onTap: () async {
+                        if (!mounted) return;
+
                         TextLayerData? layer = await Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -905,7 +928,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                           ),
                         );
 
-                        if (layer == null) return;
+                        if (!mounted || layer == null) return;
 
                         undoLayers.clear();
                         removedLayers.clear();
@@ -1157,14 +1180,17 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       text: i18n('Filter'),
                       onTap: () async {
                         resetTransformation();
-
                         if (!mounted) return;
 
                         var loadingScreen = showLoadingScreen(context);
                         var mergedImage = await getMergedImage();
-                        loadingScreen.hide();
 
-                        if (!mounted) return;
+                        if (!mounted) {
+                          loadingScreen.hide();
+                          return;
+                        }
+
+                        loadingScreen.hide();
 
                         Uint8List? filterAppliedImage = await Navigator.push(
                           context,
@@ -1176,7 +1202,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                           ),
                         );
 
-                        if (filterAppliedImage == null || !mounted) return;
+                        if (!mounted || filterAppliedImage == null) return;
 
                         removedLayers.clear();
                         undoLayers.clear();
@@ -1186,7 +1212,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                         );
 
                         layers.add(layer);
-
                         await layer.image.loader.future;
 
                         if (mounted) {
@@ -1770,6 +1795,7 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
 
   List<CubicPath> undoList = [];
   bool skipNextEvent = false;
+  bool isProcessing = false; // Add this flag
 
   void changeColor(o.BrushColor color) {
     currentColor = color.color;
@@ -1789,10 +1815,18 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
       }
 
       undoList = [];
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
 
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    control.dispose();
+    super.dispose();
   }
 
   @override
@@ -1807,7 +1841,9 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               icon: const Icon(Icons.clear),
               onPressed: () {
-                Navigator.pop(context);
+                if (!isProcessing) {
+                  Navigator.pop(context);
+                }
               },
             ),
             const Spacer(),
@@ -1820,11 +1856,13 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                     : Colors.white.withAlpha(80),
               ),
               onPressed: () {
-                if (control.paths.isEmpty) return;
+                if (control.paths.isEmpty || isProcessing) return;
                 skipNextEvent = true;
                 undoList.add(control.paths.last);
                 control.stepBack();
-                setState(() {});
+                if (mounted) {
+                  setState(() {});
+                }
               },
             ),
             IconButton(
@@ -1836,52 +1874,94 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                     : Colors.white.withAlpha(80),
               ),
               onPressed: () {
-                if (undoList.isEmpty) return;
+                if (undoList.isEmpty || isProcessing) return;
 
                 control.paths.add(undoList.removeLast());
-                setState(() {});
+                if (mounted) {
+                  setState(() {});
+                }
               },
             ),
             IconButton(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              icon: const Icon(Icons.check),
-              onPressed: () async {
-                if (control.paths.isEmpty) {
-                  if (mounted) Navigator.pop(context);
-                  return;
-                }
+              icon: isProcessing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check),
+              onPressed: isProcessing
+                  ? null
+                  : () async {
+                      // If no drawing, just go back
+                      if (control.paths.isEmpty) {
+                        Navigator.pop(context);
+                        return;
+                      }
 
-                try {
-                  if (widget.options.translatable) {
-                    var data = await control.toImage(
-                      color: currentColor,
-                      background:
-                          Colors.transparent, // Make background transparent
-                      height: widget.image.height,
-                      width: widget.image.width,
-                    );
+                      if (!mounted) return;
 
-                    if (mounted && data != null) {
-                      Navigator.pop(context, data.buffer.asUint8List());
-                    }
-                    return;
-                  }
+                      setState(() {
+                        isProcessing = true;
+                      });
 
-                  if (!mounted) return;
+                      try {
+                        Uint8List? imageData;
 
-                  var loadingScreen = showLoadingScreen(context);
-                  var image = await screenshotController.capture();
-                  loadingScreen.hide();
+                        if (widget.options.translatable) {
+                          // Create transparent background drawing
+                          final bytes = await screenshotController.capture(
+                            pixelRatio: MediaQuery.of(context).devicePixelRatio,
+                          );
 
-                  if (mounted && image != null) {
-                    Navigator.pop(context, image);
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    Navigator.pop(context);
-                  }
-                }
-              },
+                          if (bytes != null) {
+                            // Convert to image with transparent background
+                            final image = img.decodeImage(bytes);
+                            if (image != null) {
+                              // Make the background color transparent
+                              for (var pixel in image) {
+                                // If pixel matches background color, make it transparent
+                                if (pixel.r == currentBackgroundColor.red &&
+                                    pixel.g == currentBackgroundColor.green &&
+                                    pixel.b == currentBackgroundColor.blue) {
+                                  pixel.a = 0;
+                                }
+                              }
+                              imageData = Uint8List.fromList(
+                                img.encodePng(image),
+                              );
+                            } else {
+                              imageData = bytes;
+                            }
+                          }
+                        } else {
+                          // Include background image
+                          imageData = await screenshotController.capture(
+                            pixelRatio: MediaQuery.of(context).devicePixelRatio,
+                          );
+                        }
+
+                        if (mounted && imageData != null) {
+                          Navigator.pop(context, imageData);
+                        } else if (mounted) {
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          Navigator.pop(context);
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            isProcessing = false;
+                          });
+                        }
+                      }
+                    },
             ),
           ],
         ),
@@ -1923,6 +2003,7 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                 ColorButton(
                   color: Colors.yellow,
                   onTap: (color) {
+                    if (isProcessing) return;
                     showModalBottomSheet(
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.only(
@@ -1963,7 +2044,9 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                               enableShadesSelection: false,
                               onColorChanged: (color) {
                                 currentColor = color;
-                                setState(() {});
+                                if (mounted) {
+                                  setState(() {});
+                                }
                               },
                             ),
                           ),
@@ -1976,8 +2059,11 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
                   ColorButton(
                     color: color.color,
                     onTap: (color) {
+                      if (isProcessing) return;
                       currentColor = color;
-                      setState(() {});
+                      if (mounted) {
+                        setState(() {});
+                      }
                     },
                     isSelected: color.color == currentColor,
                   ),
