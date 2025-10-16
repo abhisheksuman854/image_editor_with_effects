@@ -55,7 +55,7 @@ class _OverlayEditorImageState extends State<OverlayEditorImage> {
                     currentShape = OverlayShape.values[nextIndex];
                   });
                 },
-                child: SizedBox(
+                child: Container(
                   width: size,
                   height: size,
                   child: Stack(
@@ -79,7 +79,7 @@ class _OverlayEditorImageState extends State<OverlayEditorImage> {
                             color: Colors.black54,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Tap to change shape',
                             style: TextStyle(
                               color: Colors.white,

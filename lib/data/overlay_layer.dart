@@ -1,6 +1,4 @@
-
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:image_editor_with_effects/data/layer.dart';
 
@@ -94,6 +92,7 @@ class OverlayWidget extends StatelessWidget {
           painter: OverlayShapePainter(
             color: overlay.color.withOpacity(overlay.opacity),
             shape: overlay.shape,
+            editable: editable,
           ),
         ),
       ),
@@ -105,10 +104,12 @@ class OverlayWidget extends StatelessWidget {
 class OverlayShapePainter extends CustomPainter {
   final Color color;
   final OverlayShape shape;
+  final bool editable;
 
   OverlayShapePainter({
     required this.color,
     required this.shape,
+    this.editable = false,
   });
 
   @override
@@ -118,7 +119,7 @@ class OverlayShapePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final strokePaint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = Colors.white.withOpacity(editable ? 0.5 : 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -147,21 +148,21 @@ class OverlayShapePainter extends CustomPainter {
   void _drawRectangle(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     canvas.drawRect(rect, paint);
-    canvas.drawRect(rect, strokePaint);
+    if (editable) canvas.drawRect(rect, strokePaint);
   }
 
   void _drawCircle(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     canvas.drawCircle(center, radius, paint);
-    canvas.drawCircle(center, radius, strokePaint);
+    if (editable) canvas.drawCircle(center, radius, strokePaint);
   }
 
   void _drawRoundedRectangle(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     final radius = Radius.circular(size.width * 0.2);
     canvas.drawRRect(RRect.fromRectAndRadius(rect, radius), paint);
-    canvas.drawRRect(RRect.fromRectAndRadius(rect, radius), strokePaint);
+    if (editable) canvas.drawRRect(RRect.fromRectAndRadius(rect, radius), strokePaint);
   }
 
   void _drawTriangle(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
@@ -171,7 +172,7 @@ class OverlayShapePainter extends CustomPainter {
       ..lineTo(0, size.height)
       ..close();
     canvas.drawPath(path, paint);
-    canvas.drawPath(path, strokePaint);
+    if (editable) canvas.drawPath(path, strokePaint);
   }
 
   void _drawStar(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
@@ -184,7 +185,7 @@ class OverlayShapePainter extends CustomPainter {
 
     for (int i = 0; i < points * 2; i++) {
       final radius = i.isEven ? outerRadius : innerRadius;
-      final angle = (i * 3.14159) / points - 3.14159 / 2;
+      final angle = (i * math.pi) / points - math.pi / 2;
       final x = centerX + radius * math.cos(angle);
       final y = centerY + radius * math.sin(angle);
 
@@ -197,7 +198,7 @@ class OverlayShapePainter extends CustomPainter {
     path.close();
 
     canvas.drawPath(path, paint);
-    canvas.drawPath(path, strokePaint);
+    if (editable) canvas.drawPath(path, strokePaint);
   }
 
   void _drawHeart(Canvas canvas, Size size, Paint paint, Paint strokePaint) {
@@ -223,7 +224,7 @@ class OverlayShapePainter extends CustomPainter {
     );
 
     canvas.drawPath(path, paint);
-    canvas.drawPath(path, strokePaint);
+    if (editable) canvas.drawPath(path, strokePaint);
   }
 
   @override

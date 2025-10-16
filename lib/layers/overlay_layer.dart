@@ -21,12 +21,10 @@ class OverlayLayer extends StatefulWidget {
 class _OverlayLayerState extends State<OverlayLayer> {
   double baseScaleFactor = 1;
   double baseAngle = 0;
-  Offset baseOffset = Offset.zero;
 
   @override
   void initState() {
     super.initState();
-    baseOffset = widget.layerData.offset;
   }
 
   @override
@@ -73,14 +71,14 @@ class _OverlayLayerState extends State<OverlayLayer> {
           scale: widget.layerData.scale,
           child: Transform.rotate(
             angle: widget.layerData.rotation,
-            child: SizedBox(
+            child: Container(
               width: widget.layerData.size,
               height: widget.layerData.size,
               child: CustomPaint(
                 painter: OverlayShapePainter(
                   color: widget.layerData.color.withOpacity(widget.layerData.opacity),
                   shape: widget.layerData.shape,
-                  // editable: widget.editable,
+                  editable: widget.editable,
                 ),
               ),
             ),

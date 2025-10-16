@@ -11,12 +11,14 @@ import 'package:hand_signature/signature.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_editor_with_effects/data/image_item.dart';
 import 'package:image_editor_with_effects/data/layer.dart';
+import 'package:image_editor_with_effects/data/overlay_layer.dart';
 import 'package:image_editor_with_effects/layers_viewer.dart';
 import 'package:image_editor_with_effects/loading_screen.dart';
 import 'package:image_editor_with_effects/modules/all_emojies.dart';
 import 'package:image_editor_with_effects/modules/layers_overlay.dart';
 import 'package:image_editor_with_effects/modules/link.dart';
 import 'package:image_editor_with_effects/modules/text.dart';
+import 'package:image_editor_with_effects/modules/overlay.dart';
 import 'package:image_editor_with_effects/options.dart' as o;
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -49,6 +51,7 @@ class ImageEditor extends StatelessWidget {
   final o.FlipOption? flipOption;
   final o.RotateOption? rotateOption;
   final o.TextOption? textOption;
+  final o.OverlayOption? overlayOption;
 
   const ImageEditor({
     super.key,
@@ -65,6 +68,7 @@ class ImageEditor extends StatelessWidget {
     this.flipOption = const o.FlipOption(),
     this.rotateOption = const o.RotateOption(),
     this.textOption = const o.TextOption(),
+    this.overlayOption = const o.OverlayOption(),
   });
 
   @override
@@ -92,6 +96,7 @@ class ImageEditor extends StatelessWidget {
         flipOption: flipOption,
         rotateOption: rotateOption,
         textOption: textOption,
+        overlayOption: overlayOption,
       );
     } else {
       return MultiImageEditor(
@@ -107,6 +112,7 @@ class ImageEditor extends StatelessWidget {
         flipOption: flipOption,
         rotateOption: rotateOption,
         textOption: textOption,
+        overlayOption: overlayOption,
       );
     }
   }
@@ -151,6 +157,7 @@ class MultiImageEditor extends StatefulWidget {
   final o.FlipOption? flipOption;
   final o.RotateOption? rotateOption;
   final o.TextOption? textOption;
+  final o.OverlayOption? overlayOption;
 
   const MultiImageEditor({
     super.key,
@@ -166,6 +173,7 @@ class MultiImageEditor extends StatefulWidget {
     this.flipOption = const o.FlipOption(),
     this.rotateOption = const o.RotateOption(),
     this.textOption = const o.TextOption(),
+    this.overlayOption = const o.OverlayOption(),
   });
 
   @override
@@ -283,11 +291,10 @@ class _MultiImageEditorState extends State<MultiImageEditor> {
                                   builder: (context) => SingleImageEditor(
                                     image: image,
                                     outputFormat: o.OutputFormat.jpeg,
+                                    overlayOption: widget.overlayOption,
                                   ),
                                 ),
                               );
-
-                              // print(img);
 
                               if (img != null) {
                                 image.load(img);
@@ -333,7 +340,6 @@ class _MultiImageEditorState extends State<MultiImageEditor> {
                                 iconSize: 20,
                                 padding: const EdgeInsets.all(0),
                                 onPressed: () {
-                                  // print('removing');
                                   images.remove(image);
                                   setState(() {});
                                 },
@@ -361,14 +367,14 @@ class _MultiImageEditorState extends State<MultiImageEditor> {
                                   onPressed: () async {
                                     Uint8List? editedImage =
                                         await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ImageFilters(
-                                              image: image.bytes,
-                                              options: widget.filtersOption,
-                                            ),
-                                          ),
-                                        );
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ImageFilters(
+                                          image: image.bytes,
+                                          options: widget.filtersOption,
+                                        ),
+                                      ),
+                                    );
 
                                     if (editedImage != null) {
                                       image.load(editedImage);
@@ -410,6 +416,7 @@ class SingleImageEditor extends StatefulWidget {
   final o.FlipOption? flipOption;
   final o.RotateOption? rotateOption;
   final o.TextOption? textOption;
+  final o.OverlayOption? overlayOption;
 
   const SingleImageEditor({
     super.key,
@@ -425,6 +432,7 @@ class SingleImageEditor extends StatefulWidget {
     this.flipOption = const o.FlipOption(),
     this.rotateOption = const o.RotateOption(),
     this.textOption = const o.TextOption(),
+    this.overlayOption = const o.OverlayOption(),
   });
 
   @override
@@ -485,7 +493,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                     return;
                   }
 
-                  if (layers.length <= 1) return; // do not remove image layer
+                  if (layers.length <= 1) return;
 
                   undoLayers.add(layers.removeLast());
 
@@ -523,8 +531,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                       if (image == null) return;
 
-                      // loadImage(image);
-
                       var imageItem = ImageItem(image);
                       await imageItem.loader.future;
 
@@ -550,8 +556,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                       if (image == null) return;
 
-                      // loadImage(image);
-
                       var imageItem = ImageItem(image);
                       await imageItem.loader.future;
 
@@ -571,17 +575,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                   if (widget.outputFormat == o.OutputFormat.json) {
                     var json = layers.map((e) => e.toJson()).toList();
-
-                    // if ((widget.outputFormat & 0xFE) > 0) {
-                    //   var editedImageBytes =
-                    //       await getMergedImage(widget.outputFormat & 0xFE);
-
-                    //   json.insert(0, {
-                    //     'type': 'MergedLayer',
-                    //     'image': editedImageBytes,
-                    //   });
-                    // }
-
                     loadingScreen.hide();
 
                     if (mounted) Navigator.pop(context, json);
@@ -631,7 +624,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
     setState(() {});
   }
 
-  /// obtain image Uint8List by merging layers
   Future<Uint8List?> getMergedImage([
     o.OutputFormat format = o.OutputFormat.png,
   ]) async {
@@ -647,7 +639,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
       }
     }
 
-    // conversion for non-png
     if (image != null && format == o.OutputFormat.jpeg) {
       var decodedImage = img.decodeImage(image);
 
@@ -666,10 +657,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
     viewportSize = MediaQuery.of(context).size;
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
-    // widthRatio = currentImage.width / viewportSize.width;
-    // heightRatio = currentImage.height / viewportSize.height;
-    // pixelRatio = math.max(heightRatio, widthRatio);
-
     return Theme(
       data: ImageEditor.theme,
       child: Scaffold(
@@ -677,22 +664,15 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
           children: [
             GestureDetector(
               onScaleUpdate: (details) {
-                // print(details);
-
-                // move
                 if (details.pointerCount == 1) {
-                  // print(details.focalPointDelta);
                   x += details.focalPointDelta.dx;
                   y += details.focalPointDelta.dy;
                   setState(() {});
                 }
 
-                // scale
                 if (details.pointerCount == 2) {
-                  // print([details.horizontalScale, details.verticalScale]);
                   if (details.horizontalScale != 1) {
-                    scaleFactor =
-                        lastScaleFactor *
+                    scaleFactor = lastScaleFactor *
                         math.min(
                           details.horizontalScale,
                           details.verticalScale,
@@ -714,22 +694,10 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       quarterTurns: rotateValue,
                       child: Transform(
                         transform: Matrix4(
-                          1,
-                          0,
-                          0,
-                          0,
-                          0,
-                          1,
-                          0,
-                          0,
-                          0,
-                          0,
-                          1,
-                          0,
-                          x,
-                          y,
-                          0,
-                          1 / scaleFactor,
+                          1, 0, 0, 0,
+                          0, 1, 0, 0,
+                          0, 0, 1, 0,
+                          x, y, 0, 1 / scaleFactor,
                         )..rotateY(flipValue),
                         alignment: FractionalOffset.center,
                         child: LayersViewer(
@@ -829,16 +797,12 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
           ],
         ),
         bottomNavigationBar: Container(
-          // color: Colors.black45,
           alignment: Alignment.bottomCenter,
           height: 86 + MediaQuery.of(context).padding.bottom,
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: const BoxDecoration(
             color: Colors.black87,
             shape: BoxShape.rectangle,
-            //   boxShadow: [
-            //     BoxShadow(blurRadius: 1),
-            //   ],
           ),
           child: SafeArea(
             child: SingleChildScrollView(
@@ -878,7 +842,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                         setState(() {});
                       },
                     ),
-                  if (widget.brushOption != null)
+  if (widget.brushOption != null)
                     BottomButton(
                       icon: Icons.edit,
                       text: i18n('Brush'),
@@ -930,7 +894,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                           if (drawing != null) {
                             currentImage.load(drawing);
-
                             setState(() {});
                           }
                         }
@@ -1059,20 +1022,14 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                       children: [
                                         Center(
                                           child: Text(
-                                            i18n(
-                                              'Slider Filter Color',
-                                            ).toUpperCase(),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                            ),
+                                            i18n('Slider Filter Color').toUpperCase(),
+                                            style: const TextStyle(color: Colors.white),
                                           ),
                                         ),
                                         const SizedBox(height: 20.0),
                                         Text(
                                           i18n('Slider Color'),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                          ),
+                                          style: const TextStyle(color: Colors.white),
                                         ),
                                         const SizedBox(height: 10),
                                         Row(
@@ -1086,9 +1043,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                                 colorListener: (int value) {
                                                   setS(() {
                                                     setState(() {
-                                                      blurLayer.color = Color(
-                                                        value,
-                                                      );
+                                                      blurLayer.color = Color(value);
                                                     });
                                                   });
                                                 },
@@ -1099,8 +1054,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                               onPressed: () {
                                                 setState(() {
                                                   setS(() {
-                                                    blurLayer.color =
-                                                        Colors.transparent;
+                                                    blurLayer.color = Colors.transparent;
                                                   });
                                                 });
                                               },
@@ -1110,9 +1064,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                         const SizedBox(height: 5.0),
                                         Text(
                                           i18n('Blur Radius'),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                          ),
+                                          style: const TextStyle(color: Colors.white),
                                         ),
                                         const SizedBox(height: 10.0),
                                         Row(
@@ -1138,8 +1090,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                               onPressed: () {
                                                 setS(() {
                                                   setState(() {
-                                                    blurLayer.color =
-                                                        Colors.white;
+                                                    blurLayer.color = Colors.white;
                                                   });
                                                 });
                                               },
@@ -1149,9 +1100,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                                         const SizedBox(height: 5.0),
                                         Text(
                                           i18n('Color Opacity'),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                          ),
+                                          style: const TextStyle(color: Colors.white),
                                         ),
                                         const SizedBox(height: 10.0),
                                         Row(
@@ -1194,31 +1143,12 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                         );
                       },
                     ),
-                  // BottomButton(
-                  //   icon: FontAwesomeIcons.eraser,
-                  //   text: 'Eraser',
-                  //   onTap: () {
-                  //     _controller.clear();
-                  //     layers.removeWhere((layer) => layer['type'] == 'drawing');
-                  //     setState(() {});
-                  //   },
-                  // ),
                   if (widget.filtersOption != null)
                     BottomButton(
                       icon: Icons.color_lens,
                       text: i18n('Filter'),
                       onTap: () async {
                         resetTransformation();
-
-                        /// Use case: if you don't want to stack your filter, use
-                        /// this logic. Along with code on line 888 and
-                        /// remove line 889
-                        // for (int i = 1; i < layers.length; i++) {
-                        //   if (layers[i] is BackgroundLayerData) {
-                        //     layers.removeAt(i);
-                        //     break;
-                        //   }
-                        // }
 
                         var loadingScreen = showLoadingScreen(context);
                         var mergedImage = await getMergedImage();
@@ -1245,10 +1175,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                           image: ImageItem(filterAppliedImage),
                         );
 
-                        /// Use case, if you don't want your filter to effect your
-                        /// other elements such as emoji and text. Use insert
-                        /// instead of add like in line 888
-                        //layers.insert(1, layer);
                         layers.add(layer);
 
                         await layer.image.loader.future;
@@ -1273,6 +1199,28 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
 
                         undoLayers.clear();
                         removedLayers.clear();
+                        layers.add(layer);
+
+                        setState(() {});
+                      },
+                    ),
+                  if (widget.overlayOption != null)
+                    BottomButton(
+                      icon: Icons.category,
+                      text: i18n('Overlay'),
+                      onTap: () async {
+                        OverlayLayerData? layer = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const OverlayEditorImage(),
+                          ),
+                        );
+
+                        if (layer == null) return;
+
+                        undoLayers.clear();
+                        removedLayers.clear();
+
                         layers.add(layer);
 
                         setState(() {});
@@ -1423,59 +1371,6 @@ class _ImageCropperState extends State<ImageCropper> {
             height: 80,
             child: Column(
               children: [
-                // Container(
-                //   height: 48,
-                //   decoration: const BoxDecoration(
-                //     boxShadow: [
-                //       BoxShadow(
-                //         color: black,
-                //         blurRadius: 10,
-                //       ),
-                //     ],
-                //   ),
-                //   child: ListView(
-                //     scrollDirection: Axis.horizontal,
-                //     children: <Widget>[
-                //       IconButton(
-                //         icon: Icon(
-                //           Icons.portrait,
-                //           color: isLandscape ? gray : white,
-                //         ).paddingSymmetric(horizontal: 8, vertical: 4),
-                //         onPressed: () {
-                //           isLandscape = false;
-                //
-                //           setState(() {});
-                //         },
-                //       ),
-                //       IconButton(
-                //         icon: Icon(
-                //           Icons.landscape,
-                //           color: isLandscape ? white : gray,
-                //         ).paddingSymmetric(horizontal: 8, vertical: 4),
-                //         onPressed: () {
-                //           isLandscape = true;
-                //
-                //           setState(() {});
-                //         },
-                //       ),
-                //       Slider(
-                //         activeColor: Colors.white,
-                //         inactiveColor: Colors.grey,
-                //         value: rotateAngle.toDouble(),
-                //         min: 0.0,
-                //         max: 100.0,
-                //         onChangeEnd: (v) {
-                //           rotateAngle = v.toInt();
-                //           setState(() {});
-                //         },
-                //         onChanged: (v) {
-                //           rotateAngle = v.toInt();
-                //           setState(() {});
-                //         },
-                //       ),
-                //     ],
-                //   ),
-                // ),
                 Container(
                   height: 80,
                   decoration: const BoxDecoration(
@@ -1613,9 +1508,6 @@ class _ImageFiltersState extends State<ImageFilters> {
       ...(widget.options?.filters ?? presetFiltersList.sublist(1)),
     ];
 
-    // decodedImage = img.decodeImage(widget.image)!;
-    // resizedImage = img.copyResize(decodedImage, height: 64).getBytes();
-
     super.initState();
   }
 
@@ -1651,10 +1543,6 @@ class _ImageFiltersState extends State<ImageFilters> {
                   filter: selectedFilter,
                   fit: BoxFit.cover,
                   opacity: filterOpacity,
-                  // onProcess: (img) {
-                  //   print('processing done');
-                  //   filterAppliedImage = img;
-                  // },
                 ),
               ],
             ),
@@ -1767,9 +1655,7 @@ class _FilterAppliedImageState extends State<FilterAppliedImage> {
   initState() {
     super.initState();
 
-    // process filter in background
     if (widget.onProcess != null) {
-      // no filter supplied
       if (widget.filter.filters.isEmpty) {
         widget.onProcess!(widget.image);
         return;
@@ -1822,26 +1708,7 @@ class _FilterAppliedImageState extends State<FilterAppliedImage> {
             }
           })
           .catchError((err, stack) {
-            // print(err);
-            // print(stack);
           });
-
-      // final image_editor.ImageEditorOption option =
-      //     image_editor.ImageEditorOption();
-
-      // option.addOption(image_editor.ColorOption(matrix: filter.matrix));
-
-      // image_editor.ImageEditor.editImage(
-      //   image: image,
-      //   imageEditorOption: option,
-      // ).then((result) {
-      //   if (result != null) {
-      //     onProcess!(result);
-      //   }
-      // }).catchError((err, stack) {
-      //   // print(err);
-      //   // print(stack);
-      // });
     }
   }
 
