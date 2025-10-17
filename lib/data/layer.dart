@@ -15,7 +15,6 @@ enum LayerType {
   backgroundBlur,
 }
 
-
 /// Layer class with some common properties
 class Layer {
   Offset offset;
@@ -286,7 +285,6 @@ class BackgroundBlurLayerData extends Layer {
   }
 }
 
-
 /// Attributes used by [BrushLayer]
 class BrushLayerData extends Layer {
   List<CubicPath> paths;
@@ -356,28 +354,32 @@ class BrushPainter extends CustomPainter {
         ..style = PaintingStyle.stroke;
 
       final points = cubicPath.points;
-      
+
       for (int i = 0; i < points.length - 1; i++) {
         final point = points[i];
         final nextPoint = points[i + 1];
-        
+
         // OffsetPoint has dx, dy, and timestamp (int, not DateTime)
         final currentOffset = Offset(point.dx, point.dy);
         final nextOffset = Offset(nextPoint.dx, nextPoint.dy);
-        
+
         // Calculate stroke width based on distance
         final distance = (nextOffset - currentOffset).distance;
-        
+
         // Timestamp is in milliseconds as int
-        final timeDiff = (nextPoint.timestamp - point.timestamp).abs().clamp(1, 1000);
+        final timeDiff = (nextPoint.timestamp - point.timestamp).abs().clamp(
+          1,
+          1000,
+        );
         final velocity = distance / timeDiff;
-        
+
         // Normalize velocity and calculate width
         final normalizedVelocity = (velocity / 2.0).clamp(0.0, 1.0);
-        final width = strokeWidth + (maxWidth - strokeWidth) * (1 - normalizedVelocity);
-        
+        final width =
+            strokeWidth + (maxWidth - strokeWidth) * (1 - normalizedVelocity);
+
         paint.strokeWidth = width.clamp(strokeWidth, maxWidth);
-        
+
         canvas.drawLine(currentOffset, nextOffset, paint);
       }
     }

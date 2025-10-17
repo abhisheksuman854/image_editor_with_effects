@@ -872,31 +872,31 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       },
                     ),
                   if (widget.brushOption != null)
-  BottomButton(
-    icon: Icons.edit,
-    text: i18n('Brush'),
-    onTap: () async {
-      if (!mounted) return;
+                    BottomButton(
+                      icon: Icons.edit,
+                      text: i18n('Brush'),
+                      onTap: () async {
+                        if (!mounted) return;
 
-      BrushLayerData? brushLayer = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ImageEditorDrawing(
-            image: currentImage,
-            options: widget.brushOption!,
-          ),
-        ),
-      );
+                        BrushLayerData? brushLayer = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ImageEditorDrawing(
+                              image: currentImage,
+                              options: widget.brushOption!,
+                            ),
+                          ),
+                        );
 
-      if (!mounted || brushLayer == null) return;
+                        if (!mounted || brushLayer == null) return;
 
-      undoLayers.clear();
-      removedLayers.clear();
+                        undoLayers.clear();
+                        removedLayers.clear();
 
-      layers.add(brushLayer);
-      setState(() {});
-    },
-  ),
+                        layers.add(brushLayer);
+                        setState(() {});
+                      },
+                    ),
                   if (widget.textOption != null)
                     BottomButton(
                       icon: Icons.text_fields,
@@ -1987,6 +1987,7 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
     );
   }
 }
+
 /// Button used in bottomNavigationBar in ImageEditorDrawing
 class ColorButton extends StatelessWidget {
   final Color color;

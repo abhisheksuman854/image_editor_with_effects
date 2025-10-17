@@ -88,21 +88,19 @@ class LayersViewer extends StatelessWidget {
             onUpdate: onUpdate,
             editable: editable,
           );
+        } else if (layerItem is BrushLayerData) {
+          // Render brush layer
+          return CustomPaint(
+            painter: BrushPainter(
+              paths: layerItem.paths,
+              color: layerItem.color,
+              strokeWidth: layerItem.strokeWidth,
+              maxWidth: layerItem.maxWidth,
+            ),
+            size: Size.infinite,
+            child: Container(), // Empty container to provide size
+          );
         }
-
-         else if (layerItem is BrushLayerData) {
-    // Render brush layer
-    return CustomPaint(
-      painter: BrushPainter(
-        paths: layerItem.paths,
-        color: layerItem.color,
-        strokeWidth: layerItem.strokeWidth,
-        maxWidth: layerItem.maxWidth,
-      ),
-      size: Size.infinite,
-      child: Container(), // Empty container to provide size
-    );
-  }
 
         // Blank layer
         return Container();
