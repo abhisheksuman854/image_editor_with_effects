@@ -1,5 +1,9 @@
 ## 0.0.3
 
+* Updated Brush Layer
+
+## 0.0.3
+
 * Added Overlay Layer
 
 ## 0.0.2
