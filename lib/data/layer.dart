@@ -51,6 +51,8 @@ class Layer {
         return TextLayerData.fromJson(json);
       case 'BackgroundBlurLayer':
         return BackgroundBlurLayerData.fromJson(json);
+      case 'BrushLayer':
+        return BrushLayerData.fromJson(json);
       default:
         return Layer();
     }
@@ -284,7 +286,8 @@ class BackgroundBlurLayerData extends Layer {
   }
 }
 
-// Brush Layer
+
+/// Attributes used by [BrushLayer]
 class BrushLayerData extends Layer {
   List<CubicPath> paths;
   Color color;
@@ -296,57 +299,38 @@ class BrushLayerData extends Layer {
     this.color = Colors.white,
     this.strokeWidth = 1.0,
     this.maxWidth = 7.0,
-    Offset? offset,
-    double? rotation,
-    double? scale,
-    String? id,
-  }) : super(
-          offset: offset ?? Offset.zero,
-          rotation: rotation ?? 0,
-          scale: scale ?? 1,
-        );
+    super.offset,
+    super.rotation,
+    super.scale,
+    super.opacity,
+  });
 
-  @override
-  LayerType get type => LayerType.brush;
-
-  @override
-  Widget render() {
-    return CustomPaint(
-      painter: BrushPainter(
-        paths: paths,
-        color: color,
-        strokeWidth: strokeWidth,
-        maxWidth: maxWidth,
-      ),
-      size: Size.infinite,
+  static BrushLayerData fromJson(Map json) {
+    var layer = BrushLayerData(
+      color: Color(json['color']),
+      strokeWidth: json['strokeWidth'],
+      maxWidth: json['maxWidth'],
     );
+    layer.copyFrom(json);
+    return layer;
   }
 
   @override
-  Map<String, dynamic> toJson() {
+  Map toJson() {
     return {
-      'type': 'brush',
-      'paths': paths.map((path) {
-        final points = path.points;
-        return {
-          'points': points.map((p) => {
-            'x': p.dx,
-            'y': p.dy,
-            'timestamp': p.timestamp,
-          }).toList(),
-        };
-      }).toList(),
+      'type': 'BrushLayer',
       'color': color.value,
       'strokeWidth': strokeWidth,
       'maxWidth': maxWidth,
-      'offset': {'dx': offset.dx, 'dy': offset.dy},
+      'offset': [offset.dx, offset.dy],
+      'opacity': opacity,
       'rotation': rotation,
       'scale': scale,
     };
   }
 }
 
-// Brush Painter
+/// Custom painter for brush strokes
 class BrushPainter extends CustomPainter {
   final List<CubicPath> paths;
   final Color color;
@@ -363,8 +347,7 @@ class BrushPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (var cubicPath in paths) {
-      final points = cubicPath.points;
-      if (points.isEmpty) continue;
+      if (cubicPath.points.isEmpty) continue;
 
       final paint = Paint()
         ..color = color
@@ -372,23 +355,30 @@ class BrushPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round
         ..style = PaintingStyle.stroke;
 
+      final points = cubicPath.points;
+      
       for (int i = 0; i < points.length - 1; i++) {
         final point = points[i];
         final nextPoint = points[i + 1];
         
-        // Calculate stroke width based on velocity
-        final distance = Offset(nextPoint.dx, nextPoint.dy).distance;
-        final timeDiff = (nextPoint.timestamp - point.timestamp).clamp(1, 1000);
+        // OffsetPoint has dx, dy, and timestamp (int, not DateTime)
+        final currentOffset = Offset(point.dx, point.dy);
+        final nextOffset = Offset(nextPoint.dx, nextPoint.dy);
+        
+        // Calculate stroke width based on distance
+        final distance = (nextOffset - currentOffset).distance;
+        
+        // Timestamp is in milliseconds as int
+        final timeDiff = (nextPoint.timestamp - point.timestamp).abs().clamp(1, 1000);
         final velocity = distance / timeDiff;
-        final width = (strokeWidth + (maxWidth - strokeWidth) * (1 - velocity.clamp(0, 1))).clamp(strokeWidth, maxWidth);
         
-        paint.strokeWidth = width;
+        // Normalize velocity and calculate width
+        final normalizedVelocity = (velocity / 2.0).clamp(0.0, 1.0);
+        final width = strokeWidth + (maxWidth - strokeWidth) * (1 - normalizedVelocity);
         
-        canvas.drawLine(
-          Offset(point.dx, point.dy),
-          Offset(nextPoint.dx, nextPoint.dy),
-          paint,
-        );
+        paint.strokeWidth = width.clamp(strokeWidth, maxWidth);
+        
+        canvas.drawLine(currentOffset, nextOffset, paint);
       }
     }
   }

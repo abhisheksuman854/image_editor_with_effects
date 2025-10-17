@@ -81,7 +81,9 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
         // Fallback icon if no image
         return const Icon(Icons.category, size: 32, color: Colors.white);
       }
-    } else if (layer is BackgroundBlurLayerData) {
+    } else if (layer is BrushLayerData) {
+      return const Icon(Icons.edit, size: 32, color: Colors.white);
+    }else if (layer is BackgroundBlurLayerData) {
       return const Icon(Icons.blur_on, size: 32, color: Colors.white);
     } else {
       return const Text('', style: TextStyle(color: Colors.white));
@@ -118,7 +120,14 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else if (layer is BackgroundBlurLayerData) {
+    }else if (layer is BrushLayerData) {
+      return const Text(
+        'Brush Layer',
+        style: TextStyle(color: Colors.white),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }  else if (layer is BackgroundBlurLayerData) {
       return const Text(
         'Blur Layer',
         style: TextStyle(color: Colors.white),
@@ -203,7 +212,7 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
             GestureDetector(
               key: Key('${widget.layers.indexOf(layer)}:${layer.runtimeType}'),
               onTap: () {
-                if (layer is BackgroundLayerData) return;
+                if (layer is BackgroundLayerData || layer is BrushLayerData) return;
 
                 showModalBottomSheet(
                   shape: const RoundedRectangleBorder(
