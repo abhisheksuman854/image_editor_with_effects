@@ -97,28 +97,28 @@ class RotateOption {
 class TextOption {
   /// List of available font families
   final List<String> fontFamilies;
-  
+
   /// List of available text colors
   final List<Color> textColors;
-  
+
   /// List of available gradient presets for text
   final List<Gradient> textGradients;
-  
+
   /// List of available gradient presets for text background
   final List<Gradient> backgroundGradients;
-  
+
   /// Available text animations
   final List<TextAnimation> animations;
-  
+
   /// Enable font family selection
   final bool enableFontFamily;
-  
+
   /// Enable text gradient
   final bool enableTextGradient;
-  
+
   /// Enable background gradient
   final bool enableBackgroundGradient;
-  
+
   /// Enable text animations
   final bool enableAnimations;
 
@@ -216,15 +216,7 @@ class TextOption {
 }
 
 /// Available text animation types
-enum TextAnimation {
-  none,
-  fade,
-  slide,
-  bounce,
-  rotate,
-  scale,
-  pulse,
-}
+enum TextAnimation { none, fade, slide, bounce, rotate, scale, pulse }
 
 extension TextAnimationExtension on TextAnimation {
   String get name {

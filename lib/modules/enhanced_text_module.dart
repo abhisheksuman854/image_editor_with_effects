@@ -16,8 +16,8 @@ class EnhancedTextLayerData extends Layer {
   TextAlign align;
   Color background;
   double backgroundOpacity;
-  Offset offset;
-  double rotation;
+  Offset offsetValue;
+  double rotationValue;
   String fontFamily;
   Gradient? textGradient;
   Gradient? backgroundGradient;
@@ -25,7 +25,7 @@ class EnhancedTextLayerData extends Layer {
   double animationDuration;
   FontWeight fontWeight;
   bool isItalic;
-  
+
   EnhancedTextLayerData({
     required this.text,
     this.color = Colors.white,
@@ -33,8 +33,8 @@ class EnhancedTextLayerData extends Layer {
     this.align = TextAlign.center,
     this.background = Colors.transparent,
     this.backgroundOpacity = 0.0,
-    this.offset = Offset.zero,
-    this.rotation = 0.0,
+    this.offsetValue = Offset.zero,
+    this.rotationValue = 0.0,
     this.fontFamily = 'Roboto',
     this.textGradient,
     this.backgroundGradient,
@@ -122,7 +122,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
 
   TextStyle _getTextStyle() {
     TextStyle baseStyle;
-    
+
     try {
       baseStyle = GoogleFonts.getFont(
         currentFont,
@@ -140,7 +140,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
         fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
       );
     }
-    
+
     return baseStyle;
   }
 
@@ -161,24 +161,32 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
             // Text Alignment
             IconButton(
               icon: const Icon(Icons.format_align_left),
-              color: currentAlign == TextAlign.left ? Colors.white : Colors.grey,
+              color: currentAlign == TextAlign.left
+                  ? Colors.white
+                  : Colors.grey,
               onPressed: () => setState(() => currentAlign = TextAlign.left),
             ),
             IconButton(
               icon: const Icon(Icons.format_align_center),
-              color: currentAlign == TextAlign.center ? Colors.white : Colors.grey,
+              color: currentAlign == TextAlign.center
+                  ? Colors.white
+                  : Colors.grey,
               onPressed: () => setState(() => currentAlign = TextAlign.center),
             ),
             IconButton(
               icon: const Icon(Icons.format_align_right),
-              color: currentAlign == TextAlign.right ? Colors.white : Colors.grey,
+              color: currentAlign == TextAlign.right
+                  ? Colors.white
+                  : Colors.grey,
               onPressed: () => setState(() => currentAlign = TextAlign.right),
             ),
             const SizedBox(width: 8),
             // Bold
             IconButton(
               icon: const Icon(Icons.format_bold),
-              color: currentWeight == FontWeight.bold ? Colors.white : Colors.grey,
+              color: currentWeight == FontWeight.bold
+                  ? Colors.white
+                  : Colors.grey,
               onPressed: () => setState(() {
                 currentWeight = currentWeight == FontWeight.bold
                     ? FontWeight.normal
@@ -202,7 +210,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                   );
                   return;
                 }
-                
+
                 Navigator.pop(
                   context,
                   EnhancedTextLayerData(
@@ -211,13 +219,19 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                     size: currentSize,
                     align: currentAlign,
                     background: currentBackgroundColor,
-                    backgroundOpacity: currentBackgroundColor != Colors.transparent ? 0.7 : 0.0,
+                    backgroundOpacity:
+                        currentBackgroundColor != Colors.transparent
+                        ? 0.7
+                        : 0.0,
                     fontFamily: currentFont,
                     textGradient: currentTextGradient,
                     backgroundGradient: currentBackgroundGradient,
                     fontWeight: currentWeight,
                     isItalic: isItalic,
-                    offset: Offset(viewportSize.width / 4, viewportSize.height / 3),
+                    offsetValue: Offset(
+                      viewportSize.width / 4,
+                      viewportSize.height / 3,
+                    ),
                   ),
                 );
               },
@@ -236,10 +250,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                 child: _controller.text.isEmpty
                     ? Text(
                         'Type your text...',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 24,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 24),
                       )
                     : Container(
                         padding: const EdgeInsets.symmetric(
@@ -249,7 +260,9 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                         decoration: BoxDecoration(
                           color: currentBackgroundGradient == null
                               ? currentBackgroundColor.withOpacity(
-                                  currentBackgroundColor != Colors.transparent ? 0.7 : 0.0,
+                                  currentBackgroundColor != Colors.transparent
+                                      ? 0.7
+                                      : 0.0,
                                 )
                               : null,
                           gradient: currentBackgroundGradient,
@@ -273,7 +286,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                       ),
               ),
             ),
-            
+
             // Text Input
             Container(
               color: Colors.grey[900],
@@ -291,7 +304,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                 onChanged: (value) => setState(() {}),
               ),
             ),
-            
+
             // Options Panel
             Expanded(
               flex: 3,
@@ -333,7 +346,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                           ),
                         ),
                       ),
-                      
+
                       // Font Family
                       _buildSection(
                         'Font',
@@ -385,7 +398,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                           ),
                         ),
                       ),
-                      
+
                       // Text Color
                       _buildSection(
                         'Text Color',
@@ -397,7 +410,8 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                             itemCount: widget.textColors.length,
                             itemBuilder: (context, index) {
                               final color = widget.textColors[index];
-                              final isSelected = currentColor == color &&
+                              final isSelected =
+                                  currentColor == color &&
                                   currentTextGradient == null;
                               return GestureDetector(
                                 onTap: () => setState(() {
@@ -424,7 +438,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                           ),
                         ),
                       ),
-                      
+
                       // Text Gradient
                       if (widget.textGradients.isNotEmpty)
                         _buildSection(
@@ -433,13 +447,16 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                             height: 60,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               itemCount: widget.textGradients.length + 1,
                               itemBuilder: (context, index) {
                                 if (index == 0) {
                                   return GestureDetector(
-                                    onTap: () =>
-                                        setState(() => currentTextGradient = null),
+                                    onTap: () => setState(
+                                      () => currentTextGradient = null,
+                                    ),
                                     child: Container(
                                       width: 70,
                                       margin: const EdgeInsets.only(right: 12),
@@ -462,11 +479,14 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                                     ),
                                   );
                                 }
-                                final gradient = widget.textGradients[index - 1];
-                                final isSelected = currentTextGradient == gradient;
+                                final gradient =
+                                    widget.textGradients[index - 1];
+                                final isSelected =
+                                    currentTextGradient == gradient;
                                 return GestureDetector(
-                                  onTap: () =>
-                                      setState(() => currentTextGradient = gradient),
+                                  onTap: () => setState(
+                                    () => currentTextGradient = gradient,
+                                  ),
                                   child: Container(
                                     width: 70,
                                     margin: const EdgeInsets.only(right: 12),
@@ -486,7 +506,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                             ),
                           ),
                         ),
-                      
+
                       // Background
                       _buildSection(
                         'Background',
@@ -498,7 +518,8 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                             itemCount: widget.textColors.length,
                             itemBuilder: (context, index) {
                               final color = widget.textColors[index];
-                              final isSelected = currentBackgroundColor == color &&
+                              final isSelected =
+                                  currentBackgroundColor == color &&
                                   currentBackgroundGradient == null;
                               return GestureDetector(
                                 onTap: () => setState(() {
@@ -532,7 +553,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                           ),
                         ),
                       ),
-                      
+
                       // Background Gradient
                       if (widget.backgroundGradients.isNotEmpty)
                         _buildSection(
@@ -541,14 +562,17 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                             height: 60,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               itemCount: widget.backgroundGradients.length + 1,
                               itemBuilder: (context, index) {
                                 if (index == 0) {
                                   return GestureDetector(
                                     onTap: () => setState(() {
                                       currentBackgroundGradient = null;
-                                      currentBackgroundColor = Colors.transparent;
+                                      currentBackgroundColor =
+                                          Colors.transparent;
                                     }),
                                     child: Container(
                                       width: 70,
@@ -557,7 +581,8 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                                         color: Colors.grey[800],
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
-                                          color: currentBackgroundGradient == null
+                                          color:
+                                              currentBackgroundGradient == null
                                               ? Colors.white
                                               : Colors.transparent,
                                           width: 2,
@@ -572,8 +597,10 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                                     ),
                                   );
                                 }
-                                final gradient = widget.backgroundGradients[index - 1];
-                                final isSelected = currentBackgroundGradient == gradient;
+                                final gradient =
+                                    widget.backgroundGradients[index - 1];
+                                final isSelected =
+                                    currentBackgroundGradient == gradient;
                                 return GestureDetector(
                                   onTap: () => setState(() {
                                     currentBackgroundGradient = gradient;
@@ -598,7 +625,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                             ),
                           ),
                         ),
-                      
+
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -661,14 +688,14 @@ class _EnhancedTextLayerWidgetState extends State<EnhancedTextLayer>
   void initState() {
     super.initState();
     initialSize = widget.layerData.size;
-    
+
     _animController = AnimationController(
       duration: Duration(
         milliseconds: (widget.layerData.animationDuration * 1000).toInt(),
       ),
       vsync: this,
     );
-    
+
     if (widget.layerData.animation != null) {
       _animController.repeat(reverse: true);
     }
@@ -744,7 +771,7 @@ class _EnhancedTextLayerWidgetState extends State<EnhancedTextLayer>
         parent: _animController,
         curve: Curves.easeInOut,
       );
-      
+
       switch (widget.layerData.animation) {
         case 'fade':
           textWidget = FadeTransition(opacity: animation, child: textWidget);
@@ -801,8 +828,10 @@ class _EnhancedTextLayerWidgetState extends State<EnhancedTextLayer>
                     widget.layerData.offset.dy + details.focalPointDelta.dy,
                   );
                 } else if (details.pointerCount == 2) {
-                  widget.layerData.size = 
-                      (initialSize * details.scale).clamp(16.0, 120.0);
+                  widget.layerData.size = (initialSize * details.scale).clamp(
+                    16.0,
+                    120.0,
+                  );
                   widget.layerData.rotation = details.rotation;
                 }
                 setState(() {});
@@ -873,7 +902,7 @@ class _EnhancedTextLayerOverlayState extends State<EnhancedTextLayerOverlay> {
             ),
           ),
           const SizedBox(height: 20),
-          
+
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -897,9 +926,9 @@ class _EnhancedTextLayerOverlayState extends State<EnhancedTextLayerOverlay> {
                       });
                     },
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Animation selector
                   const Text(
                     'Animation',
@@ -913,11 +942,11 @@ class _EnhancedTextLayerOverlayState extends State<EnhancedTextLayerOverlay> {
                       itemCount: animations.length,
                       itemBuilder: (context, index) {
                         final animName = animations[index];
-                        final animValue = animName == 'None' 
-                            ? null 
+                        final animValue = animName == 'None'
+                            ? null
                             : animName.toLowerCase();
                         final isSelected = widget.layer.animation == animValue;
-                        
+
                         return GestureDetector(
                           onTap: () {
                             setState(() {
@@ -932,14 +961,18 @@ class _EnhancedTextLayerOverlayState extends State<EnhancedTextLayerOverlay> {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.white : Colors.grey[800],
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.grey[800],
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Center(
                               child: Text(
                                 animName,
                                 style: TextStyle(
-                                  color: isSelected ? Colors.black : Colors.white,
+                                  color: isSelected
+                                      ? Colors.black
+                                      : Colors.white,
                                 ),
                               ),
                             ),
@@ -948,13 +981,13 @@ class _EnhancedTextLayerOverlayState extends State<EnhancedTextLayerOverlay> {
                       },
                     ),
                   ),
-                  
+
                   const SizedBox(height: 30),
                 ],
               ),
             ),
           ),
-          
+
           // Action buttons
           Padding(
             padding: const EdgeInsets.all(20),
@@ -978,7 +1011,8 @@ class _EnhancedTextLayerOverlayState extends State<EnhancedTextLayerOverlay> {
                       widget.layer.size = result.size;
                       widget.layer.fontFamily = result.fontFamily;
                       widget.layer.textGradient = result.textGradient;
-                      widget.layer.backgroundGradient = result.backgroundGradient;
+                      widget.layer.backgroundGradient =
+                          result.backgroundGradient;
                       widget.layer.align = result.align;
                       widget.layer.fontWeight = result.fontWeight;
                       widget.layer.isItalic = result.isItalic;
@@ -997,7 +1031,7 @@ class _EnhancedTextLayerOverlayState extends State<EnhancedTextLayerOverlay> {
                       fontFamily: widget.layer.fontFamily,
                       textGradient: widget.layer.textGradient,
                       backgroundGradient: widget.layer.backgroundGradient,
-                      offset: widget.layer.offset + const Offset(20, 20),
+                      offsetValue: widget.layer.offset + const Offset(20, 20),
                       align: widget.layer.align,
                       fontWeight: widget.layer.fontWeight,
                       isItalic: widget.layer.isItalic,

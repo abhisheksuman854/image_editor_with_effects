@@ -65,13 +65,13 @@ class LayersViewer extends StatelessWidget {
 
         // Text layer
         if (layerItem is EnhancedTextLayerData) {
-  return EnhancedTextLayer(
-    key: ValueKey('enhanced_text_${layers.indexOf(layerItem)}'),
-    layerData: layerItem,
-    editable: editable,
-    onUpdate: onUpdate,
-  );
-}
+          return EnhancedTextLayer(
+            key: ValueKey('enhanced_text_${layers.indexOf(layerItem)}'),
+            layerData: layerItem,
+            editable: editable,
+            onUpdate: onUpdate,
+          );
+        }
 
         // Link layer
         if (layerItem is LinkLayerData) {
