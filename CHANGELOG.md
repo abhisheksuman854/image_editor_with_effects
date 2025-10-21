@@ -1,3 +1,7 @@
+## 0.0.4
+
+* Added Enhanced Text Layer
+
 ## 0.0.3
 
 * Updated Brush Layer
