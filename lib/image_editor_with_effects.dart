@@ -462,13 +462,12 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
     }
   }
 
-  @override
-  void dispose() {
-    layers.clear();
-    undoLayers.clear();
-    removedLayers.clear();
-    super.dispose();
-  }
+@override
+void dispose() {
+  // Don't clear global layers here
+  // They might be needed by other instances
+  super.dispose();
+}
 
   List<Widget> get filterActions {
     return [
@@ -480,28 +479,28 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              IconButton(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                icon: Icon(
-                  Icons.undo,
-                  color: layers.length > 1 || removedLayers.isNotEmpty
-                      ? Colors.white
-                      : Colors.grey,
-                ),
-                onPressed: () {
-                  if (removedLayers.isNotEmpty) {
-                    layers.add(removedLayers.removeLast());
-                    setState(() {});
-                    return;
-                  }
+             IconButton(
+  padding: const EdgeInsets.symmetric(horizontal: 8),
+  icon: Icon(
+    Icons.undo,
+    color: layers.length > 1 || removedLayers.isNotEmpty
+        ? Colors.white
+        : Colors.grey,
+  ),
+  onPressed: () {
+    if (removedLayers.isNotEmpty) {
+      layers.add(removedLayers.removeLast());
+      setState(() {});
+      return;
+    }
 
-                  if (layers.length <= 1) return;
+    // DON'T allow undo if it would remove the background layer
+    if (layers.length <= 1) return;
 
-                  undoLayers.add(layers.removeLast());
-
-                  setState(() {});
-                },
-              ),
+    undoLayers.add(layers.removeLast());
+    setState(() {});
+  },
+),
               IconButton(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 icon: Icon(
@@ -571,31 +570,52 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                     },
                   ),
                 ),
-              IconButton(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                icon: const Icon(Icons.check),
-                onPressed: () async {
-                  resetTransformation();
-                  setState(() {});
+             IconButton(
+  padding: const EdgeInsets.symmetric(horizontal: 8),
+  icon: const Icon(Icons.check),
+  onPressed: () async {
+    resetTransformation();
+    
+    // Verify we have content
+    if (layers.isEmpty || currentImage.bytes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No image to save')),
+      );
+      return;
+    }
 
-                  var loadingScreen = showLoadingScreen(context);
+    setState(() {});
+    var loadingScreen = showLoadingScreen(context);
 
-                  if (widget.outputFormat == o.OutputFormat.json) {
-                    var json = layers.map((e) => e.toJson()).toList();
-                    loadingScreen.hide();
+    try {
+      if (widget.outputFormat == o.OutputFormat.json) {
+        var json = layers.map((e) => e.toJson()).toList();
+        loadingScreen.hide();
+        if (mounted) Navigator.pop(context, json);
+      } else {
+        var editedImageBytes = await getMergedImage(widget.outputFormat);
+        loadingScreen.hide();
 
-                    if (mounted) Navigator.pop(context, json);
-                  } else {
-                    var editedImageBytes = await getMergedImage(
-                      widget.outputFormat,
-                    );
-
-                    loadingScreen.hide();
-
-                    if (mounted) Navigator.pop(context, editedImageBytes);
-                  }
-                },
-              ),
+        if (mounted && editedImageBytes != null) {
+          Navigator.pop(context, editedImageBytes);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to process image')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      loadingScreen.hide();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  },
+),
             ],
           ),
         ),
@@ -604,15 +624,37 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
   }
 
   @override
-  void initState() {
-    if (widget.image != null) {
-      loadImage(widget.image!);
-    }
-
-    checkPermissions();
-
-    super.initState();
+void initState() {
+  super.initState();
+  
+  // Initialize layers if empty
+  if (layers.isEmpty) {
+    layers = [];
+    undoLayers = [];
+    removedLayers = [];
   }
+  
+  if (widget.image != null) {
+    loadImage(widget.image!);
+  }
+
+  checkPermissions();
+}
+
+void ensureBackgroundLayer() {
+  // Check if there's a background layer
+  bool hasBackground = layers.any((layer) => 
+    layer is BackgroundLayerData
+  );
+  
+  // If no background and we have an image, create one
+  if (!hasBackground && currentImage.bytes.isNotEmpty) {
+    layers.insert(0, BackgroundLayerData(image: currentImage));
+    if (mounted) {
+      setState(() {});
+    }
+  }
+}
 
   double flipValue = 0;
   int rotateValue = 0;
@@ -631,39 +673,56 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
     setState(() {});
   }
 
-  Future<Uint8List?> getMergedImage([
-    o.OutputFormat format = o.OutputFormat.png,
-  ]) async {
-    Uint8List? image;
+ Future<Uint8List?> getMergedImage([
+  o.OutputFormat format = o.OutputFormat.png,
+]) async {
+  Uint8List? image;
 
-    if (flipValue != 0 || rotateValue != 0 || layers.length > 1) {
-      image = await screenshotController.capture(pixelRatio: pixelRatio);
-    } else if (layers.length == 1) {
-      if (layers.first is BackgroundLayerData) {
-        image = (layers.first as BackgroundLayerData).image.bytes;
-      } else if (layers.first is ImageLayerData) {
-        image = (layers.first as ImageLayerData).image.bytes;
-      }
-    }
-
-    if (image != null && format == o.OutputFormat.jpeg) {
-      var decodedImage = img.decodeImage(image);
-
-      if (decodedImage == null) {
-        throw Exception('Unable to decode image for conversion.');
-      }
-
-      return img.encodeJpg(decodedImage);
-    }
-
-    return image;
+  // Check if we have layers
+  if (layers.isEmpty) {
+    // Fallback to current image
+    return currentImage.bytes.isNotEmpty ? currentImage.bytes : null;
   }
 
+  // If only background layer and no transformations, return original
+  if (flipValue == 0 && rotateValue == 0 && layers.length == 1) {
+    if (layers.first is BackgroundLayerData) {
+      image = (layers.first as BackgroundLayerData).image.bytes;
+    } else if (layers.first is ImageLayerData) {
+      image = (layers.first as ImageLayerData).image.bytes;
+    }
+  } else {
+    // Capture screenshot for multiple layers or transformations
+    try {
+      image = await screenshotController.capture(pixelRatio: pixelRatio);
+    } catch (e) {
+      print('Screenshot capture failed: $e');
+      // Fallback to background layer
+      if (layers.isNotEmpty && layers.first is BackgroundLayerData) {
+        image = (layers.first as BackgroundLayerData).image.bytes;
+      } else {
+        image = currentImage.bytes;
+      }
+    }
+  }
+
+  // Convert to JPEG if needed
+  if (image != null && format == o.OutputFormat.jpeg) {
+    var decodedImage = img.decodeImage(image);
+    if (decodedImage == null) {
+      throw Exception('Unable to decode image for conversion.');
+    }
+    return img.encodeJpg(decodedImage);
+  }
+
+  return image;
+}
   @override
   Widget build(BuildContext context) {
     viewportSize = MediaQuery.of(context).size;
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
-
+// CRITICAL: Ensure background layer always exists
+  ensureBackgroundLayer();
     return Theme(
       data: ImageEditor.theme,
       child: Scaffold(
@@ -775,7 +834,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                           backgroundColor: Colors.transparent,
                           builder: (context) => SafeArea(
                             child: ManageLayersOverlay(
-                              layers: layers,
+                              layers: layers.toSet().toList(),
                               onUpdate: () => setState(() {}),
                             ),
                           ),
@@ -1264,14 +1323,22 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
   final picker = ImagePicker();
 
   Future<void> loadImage(dynamic imageFile) async {
-    await currentImage.load(imageFile);
+  // Clear existing layers FIRST
+  layers.clear();
+  undoLayers.clear();
+  removedLayers.clear();
+  
+  // Load the image
+  await currentImage.load(imageFile);
 
-    layers.clear();
+  // CRITICAL: Always create background layer immediately
+  layers.add(BackgroundLayerData(image: currentImage));
 
-    layers.add(BackgroundLayerData(image: currentImage));
-
+  // Force UI update
+  if (mounted) {
     setState(() {});
   }
+}
 }
 
 /// Button used in bottomNavigationBar in ImageEditor
