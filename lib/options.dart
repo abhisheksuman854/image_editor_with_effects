@@ -95,7 +95,156 @@ class RotateOption {
 }
 
 class TextOption {
-  const TextOption();
+  /// List of available font families
+  final List<String> fontFamilies;
+  
+  /// List of available text colors
+  final List<Color> textColors;
+  
+  /// List of available gradient presets for text
+  final List<Gradient> textGradients;
+  
+  /// List of available gradient presets for text background
+  final List<Gradient> backgroundGradients;
+  
+  /// Available text animations
+  final List<TextAnimation> animations;
+  
+  /// Enable font family selection
+  final bool enableFontFamily;
+  
+  /// Enable text gradient
+  final bool enableTextGradient;
+  
+  /// Enable background gradient
+  final bool enableBackgroundGradient;
+  
+  /// Enable text animations
+  final bool enableAnimations;
+
+  const TextOption({
+    this.fontFamilies = const [
+      'Roboto',
+      'Arial',
+      'Times New Roman',
+      'Courier',
+      'Georgia',
+      'Verdana',
+      'Helvetica',
+    ],
+    this.textColors = const [
+      Colors.white,
+      Colors.black,
+      Colors.red,
+      Colors.blue,
+      Colors.green,
+      Colors.yellow,
+      Colors.purple,
+      Colors.orange,
+      Colors.pink,
+      Colors.teal,
+      Colors.indigo,
+      Colors.cyan,
+    ],
+    this.textGradients = const [
+      LinearGradient(
+        colors: [Colors.purple, Colors.blue],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      LinearGradient(
+        colors: [Colors.orange, Colors.pink],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      LinearGradient(
+        colors: [Colors.green, Colors.teal],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      LinearGradient(
+        colors: [Colors.red, Colors.yellow],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      LinearGradient(
+        colors: [Colors.indigo, Colors.cyan],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
+    ],
+    this.backgroundGradients = const [
+      LinearGradient(
+        colors: [Colors.black54, Colors.transparent],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+      ),
+      LinearGradient(
+        colors: [Colors.purple, Colors.blue],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      LinearGradient(
+        colors: [Colors.orange, Colors.pink],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      RadialGradient(
+        colors: [Colors.yellow, Colors.red],
+        center: Alignment.center,
+        radius: 0.8,
+      ),
+      LinearGradient(
+        colors: [Colors.green, Colors.teal],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    ],
+    this.animations = const [
+      TextAnimation.fade,
+      TextAnimation.slide,
+      TextAnimation.bounce,
+      TextAnimation.rotate,
+      TextAnimation.scale,
+      TextAnimation.pulse,
+    ],
+    this.enableFontFamily = true,
+    this.enableTextGradient = true,
+    this.enableBackgroundGradient = true,
+    this.enableAnimations = true,
+  });
+}
+
+/// Available text animation types
+enum TextAnimation {
+  none,
+  fade,
+  slide,
+  bounce,
+  rotate,
+  scale,
+  pulse,
+}
+
+extension TextAnimationExtension on TextAnimation {
+  String get name {
+    switch (this) {
+      case TextAnimation.none:
+        return 'None';
+      case TextAnimation.fade:
+        return 'Fade';
+      case TextAnimation.slide:
+        return 'Slide';
+      case TextAnimation.bounce:
+        return 'Bounce';
+      case TextAnimation.rotate:
+        return 'Rotate';
+      case TextAnimation.scale:
+        return 'Scale';
+      case TextAnimation.pulse:
+        return 'Pulse';
+    }
+  }
 }
 
 class ImagePickerOption {

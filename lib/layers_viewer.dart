@@ -6,8 +6,8 @@ import 'package:image_editor_with_effects/layers/background_layer.dart';
 import 'package:image_editor_with_effects/layers/emoji_layer.dart';
 import 'package:image_editor_with_effects/layers/image_layer.dart';
 import 'package:image_editor_with_effects/layers/link_layer.dart';
-import 'package:image_editor_with_effects/layers/text_layer.dart';
 import 'package:image_editor_with_effects/layers/overlay_layer.dart';
+import 'package:image_editor_with_effects/modules/enhanced_text_module.dart';
 
 /// View stacked layers (unbounded height, width)
 class LayersViewer extends StatelessWidget {
@@ -64,13 +64,14 @@ class LayersViewer extends StatelessWidget {
         }
 
         // Text layer
-        if (layerItem is TextLayerData) {
-          return TextLayer(
-            layerData: layerItem,
-            onUpdate: onUpdate,
-            editable: editable,
-          );
-        }
+        if (layerItem is EnhancedTextLayerData) {
+  return EnhancedTextLayer(
+    key: ValueKey('enhanced_text_${layers.indexOf(layerItem)}'),
+    layerData: layerItem,
+    editable: editable,
+    onUpdate: onUpdate,
+  );
+}
 
         // Link layer
         if (layerItem is LinkLayerData) {

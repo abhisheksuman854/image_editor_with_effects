@@ -15,6 +15,7 @@ import 'package:image_editor_with_effects/data/overlay_layer.dart';
 import 'package:image_editor_with_effects/layers_viewer.dart';
 import 'package:image_editor_with_effects/loading_screen.dart';
 import 'package:image_editor_with_effects/modules/all_emojies.dart';
+import 'package:image_editor_with_effects/modules/enhanced_text_module.dart';
 import 'package:image_editor_with_effects/modules/layers_overlay.dart';
 import 'package:image_editor_with_effects/modules/link.dart';
 import 'package:image_editor_with_effects/modules/text.dart';
@@ -898,29 +899,34 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
                       },
                     ),
                   if (widget.textOption != null)
-                    BottomButton(
-                      icon: Icons.text_fields,
-                      text: i18n('Text'),
-                      onTap: () async {
-                        if (!mounted) return;
+  BottomButton(
+    icon: Icons.text_fields,
+    text: i18n('Text'),
+    onTap: () async {
+      if (!mounted) return;
 
-                        TextLayerData? layer = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TextEditorImage(),
-                          ),
-                        );
+      EnhancedTextLayerData? layer = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EnhancedTextEditor(
+            fontFamilies: widget.textOption!.fontFamilies,
+            textColors: widget.textOption!.textColors,
+            textGradients: widget.textOption!.textGradients,
+            backgroundGradients: widget.textOption!.backgroundGradients,
+          ),
+        ),
+      );
 
-                        if (!mounted || layer == null) return;
+      if (!mounted || layer == null) return;
 
-                        undoLayers.clear();
-                        removedLayers.clear();
+      undoLayers.clear();
+      removedLayers.clear();
 
-                        layers.add(layer);
+      layers.add(layer);
 
-                        setState(() {});
-                      },
-                    ),
+      setState(() {});
+    },
+  ),
                   if (widget.textOption != null)
                     BottomButton(
                       icon: Icons.link,

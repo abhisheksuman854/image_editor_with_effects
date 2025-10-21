@@ -46,7 +46,7 @@ class Layer {
         return OverlayLayerData.fromJson(json);
       case 'LinkLayer':
         return LinkLayerData.fromJson(json);
-      case 'TextLayer':
+      case 'EnhancedTextLayer':
         return TextLayerData.fromJson(json);
       case 'BackgroundBlurLayer':
         return BackgroundBlurLayerData.fromJson(json);
@@ -150,7 +150,7 @@ class ImageLayerData extends Layer {
   }
 }
 
-/// Attributes used by [TextLayer]
+/// Attributes used by [EnhancedTextLayer]
 class TextLayerData extends Layer {
   String text;
   double size;
@@ -188,7 +188,7 @@ class TextLayerData extends Layer {
   @override
   Map toJson() {
     return {
-      'type': 'TextLayer',
+      'type': 'EnhancedTextLayer',
       'text': text,
       'size': size,
       'color': color.toARGB32(),
