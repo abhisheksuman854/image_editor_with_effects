@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_editor_with_effects/data/layer.dart';
 import 'package:image_editor_with_effects/data/overlay_layer.dart';
 import 'package:image_editor_with_effects/modules/emoji_layer_overlay.dart';
+import 'package:image_editor_with_effects/modules/enhanced_text_module.dart';
 import 'package:image_editor_with_effects/modules/image_layer_overlay.dart';
 import 'package:image_editor_with_effects/modules/overlay_layer_overlay.dart';
 import 'package:image_editor_with_effects/modules/text_layer_overlay.dart';
@@ -18,7 +19,7 @@ class ManageLayersOverlay extends StatefulWidget {
   });
 
   @override
-  createState() => _ManageLayersOverlayState();
+  _ManageLayersOverlayState createState() => _ManageLayersOverlayState();
 }
 
 class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
@@ -28,10 +29,10 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
   Widget _buildLayerPreview(Layer layer) {
     if (layer is LinkLayerData) {
       return const Icon(Icons.link, size: 32, color: Colors.white);
-    } else if (layer is TextLayerData) {
-      return Text(
+    } else if (layer is TextLayerData || layer is EnhancedTextLayerData) {
+      return const Text(
         'T',
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 32,
           color: Colors.white,
           fontWeight: FontWeight.w100,
@@ -67,7 +68,8 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
         ),
       );
     } else if (layer is OverlayLayerData) {
-      if (layer.overlayImage != null) {
+      if (layer.overlayImage != null &&
+          layer.overlayType == OverlayType.image) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Image.memory(
@@ -209,111 +211,115 @@ class _ManageLayersOverlayState extends State<ManageLayersOverlay> {
         },
         children: [
           for (var layer in widget.layers.reversed)
-            GestureDetector(
-              key: Key('${widget.layers.indexOf(layer)}:${layer.runtimeType}'),
-              onTap: () {
-                if (layer is BackgroundLayerData || layer is BrushLayerData) {
-                  return;
-                }
-
-                showModalBottomSheet(
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(10),
-                      topLeft: Radius.circular(10),
-                    ),
-                  ),
-                  context: context,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) {
-                    if (layer is EmojiLayerData) {
-                      return EmojiLayerOverlay(
-                        index: widget.layers.indexOf(layer),
-                        layer: layer,
-                        onUpdate: () {
-                          widget.onUpdate();
-                          setState(() {});
-                        },
-                      );
-                    }
-
-                    if (layer is ImageLayerData) {
-                      return ImageLayerOverlay(
-                        index: widget.layers.indexOf(layer),
-                        layerData: layer,
-                        onUpdate: () {
-                          widget.onUpdate();
-                          setState(() {});
-                        },
-                      );
-                    }
-
-                    if (layer is TextLayerData) {
-                      return TextLayerOverlay(
-                        index: widget.layers.indexOf(layer),
-                        layer: layer,
-                        onUpdate: () {
-                          widget.onUpdate();
-                          setState(() {});
-                        },
-                      );
-                    }
-
-                    // Add overlay layer editing if you have an overlay editor
-                    if (layer is OverlayLayerData) {
-                      return OverlayLayerOverlay(
-                        index: widget.layers.indexOf(layer),
-                        layerData: layer,
-                        onUpdate: () {
-                          widget.onUpdate();
-                          setState(() {});
-                        },
-                      );
-                    }
-
-                    return Container();
-                  },
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(16),
+            if (!(layer is BackgroundLayerData &&
+                widget.layers.indexOf(layer) != 0))
+              GestureDetector(
+                key: Key(
+                  '${widget.layers.indexOf(layer)}:${layer.runtimeType}',
                 ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 64,
-                      height: 64,
-                      child: Center(child: _buildLayerPreview(layer)),
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width - 92 - 64,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [_buildLayerTitle(layer)],
+                onTap: () {
+                  if (layer is BackgroundLayerData || layer is BrushLayerData) {
+                    return;
+                  }
+
+                  showModalBottomSheet(
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(10),
+                        topLeft: Radius.circular(10),
                       ),
                     ),
-                    if (layer is! BackgroundLayerData)
-                      IconButton(
-                        onPressed: () {
-                          widget.layers.remove(layer);
-                          widget.onUpdate();
-                          setState(() {});
-                        },
-                        icon: const Icon(
-                          Icons.delete,
-                          size: 22,
-                          color: Colors.red,
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) {
+                      if (layer is EmojiLayerData) {
+                        return EmojiLayerOverlay(
+                          index: widget.layers.indexOf(layer),
+                          layer: layer,
+                          onUpdate: () {
+                            widget.onUpdate();
+                            setState(() {});
+                          },
+                        );
+                      }
+
+                      if (layer is ImageLayerData) {
+                        return ImageLayerOverlay(
+                          index: widget.layers.indexOf(layer),
+                          layerData: layer,
+                          onUpdate: () {
+                            widget.onUpdate();
+                            setState(() {});
+                          },
+                        );
+                      }
+
+                      if (layer is TextLayerData) {
+                        return TextLayerOverlay(
+                          index: widget.layers.indexOf(layer),
+                          layer: layer,
+                          onUpdate: () {
+                            widget.onUpdate();
+                            setState(() {});
+                          },
+                        );
+                      }
+
+                      // Add overlay layer editing if you have an overlay editor
+                      if (layer is OverlayLayerData) {
+                        return OverlayLayerOverlay(
+                          index: widget.layers.indexOf(layer),
+                          layerData: layer,
+                          onUpdate: () {
+                            widget.onUpdate();
+                            setState(() {});
+                          },
+                        );
+                      }
+
+                      return Container();
+                    },
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: Center(child: _buildLayerPreview(layer)),
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width - 92 - 64,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [_buildLayerTitle(layer)],
                         ),
                       ),
-                  ],
+                      if (layer is! BackgroundLayerData)
+                        IconButton(
+                          onPressed: () {
+                            widget.layers.remove(layer);
+                            widget.onUpdate();
+                            setState(() {});
+                          },
+                          icon: const Icon(
+                            Icons.delete,
+                            size: 22,
+                            color: Colors.red,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
         ],
       ),
     );

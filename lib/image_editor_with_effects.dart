@@ -177,7 +177,7 @@ class MultiImageEditor extends StatefulWidget {
   });
 
   @override
-  createState() => _MultiImageEditorState();
+  _MultiImageEditorState createState() => _MultiImageEditorState();
 }
 
 class _MultiImageEditorState extends State<MultiImageEditor> {
@@ -185,7 +185,7 @@ class _MultiImageEditorState extends State<MultiImageEditor> {
   PermissionStatus galleryPermission = PermissionStatus.permanentlyDenied,
       cameraPermission = PermissionStatus.permanentlyDenied;
 
-  void checkPermissions() async {
+  Future<void> checkPermissions() async {
     if (widget.imagePickerOption.pickFromGallery) {
       galleryPermission = await Permission.photos.status;
     }
@@ -226,7 +226,7 @@ class _MultiImageEditorState extends State<MultiImageEditor> {
                   icon: const Icon(Icons.photo),
                   onPressed: () async {
                     if (await Permission.photos.isPermanentlyDenied) {
-                      openAppSettings();
+                      await openAppSettings();
                     }
 
                     var selected = await imagePicker.pickMultiImage(
@@ -247,7 +247,7 @@ class _MultiImageEditorState extends State<MultiImageEditor> {
                   icon: const Icon(Icons.camera_alt),
                   onPressed: () async {
                     if (await Permission.camera.isPermanentlyDenied) {
-                      openAppSettings();
+                      await openAppSettings();
                     }
 
                     var selected = await imagePicker.pickImage(
@@ -436,7 +436,7 @@ class SingleImageEditor extends StatefulWidget {
   });
 
   @override
-  createState() => _SingleImageEditorState();
+  _SingleImageEditorState createState() => _SingleImageEditorState();
 }
 
 class _SingleImageEditorState extends State<SingleImageEditor> {
@@ -447,7 +447,7 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
   PermissionStatus galleryPermission = PermissionStatus.permanentlyDenied,
       cameraPermission = PermissionStatus.permanentlyDenied;
 
-  void checkPermissions() async {
+  Future<void> checkPermissions() async {
     if (widget.imagePickerOption.pickFromGallery) {
       galleryPermission = await Permission.photos.status;
     }
@@ -462,12 +462,12 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
     }
   }
 
-@override
-void dispose() {
-  // Don't clear global layers here
-  // They might be needed by other instances
-  super.dispose();
-}
+  @override
+  void dispose() {
+    // Don't clear global layers here
+    // They might be needed by other instances
+    super.dispose();
+  }
 
   List<Widget> get filterActions {
     return [
@@ -479,28 +479,33 @@ void dispose() {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-             IconButton(
-  padding: const EdgeInsets.symmetric(horizontal: 8),
-  icon: Icon(
-    Icons.undo,
-    color: layers.length > 1 || removedLayers.isNotEmpty
-        ? Colors.white
-        : Colors.grey,
-  ),
-  onPressed: () {
-    if (removedLayers.isNotEmpty) {
-      layers.add(removedLayers.removeLast());
-      setState(() {});
-      return;
-    }
+              IconButton(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                icon: Icon(
+                  Icons.undo,
+                  color:
+                      layers.any(
+                        (element) => element.runtimeType != BackgroundLayerData,
+                      )
+                      ? Colors.white
+                      : Colors.grey,
+                ),
+                onPressed:
+                    layers.any(
+                      (element) => element.runtimeType != BackgroundLayerData,
+                    )
+                    ? () {
+                        if (removedLayers.isNotEmpty) {
+                          layers.add(removedLayers.removeLast());
+                          setState(() {});
+                          return;
+                        }
 
-    // DON'T allow undo if it would remove the background layer
-    if (layers.length <= 1) return;
-
-    undoLayers.add(layers.removeLast());
-    setState(() {});
-  },
-),
+                        undoLayers.add(layers.removeLast());
+                        setState(() {});
+                      }
+                    : null,
+              ),
               IconButton(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 icon: Icon(
@@ -523,7 +528,7 @@ void dispose() {
                     icon: const Icon(Icons.photo),
                     onPressed: () async {
                       if (await Permission.photos.isPermanentlyDenied) {
-                        openAppSettings();
+                        await openAppSettings();
                         return;
                       }
 
@@ -551,7 +556,7 @@ void dispose() {
                     icon: const Icon(Icons.camera_alt),
                     onPressed: () async {
                       if (await Permission.camera.isPermanentlyDenied) {
-                        openAppSettings();
+                        await openAppSettings();
                       }
 
                       var image = await picker.pickImage(
@@ -570,52 +575,56 @@ void dispose() {
                     },
                   ),
                 ),
-             IconButton(
-  padding: const EdgeInsets.symmetric(horizontal: 8),
-  icon: const Icon(Icons.check),
-  onPressed: () async {
-    resetTransformation();
-    
-    // Verify we have content
-    if (layers.isEmpty || currentImage.bytes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No image to save')),
-      );
-      return;
-    }
+              IconButton(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                icon: const Icon(Icons.check),
+                onPressed: () async {
+                  resetTransformation();
 
-    setState(() {});
-    var loadingScreen = showLoadingScreen(context);
+                  // Verify we have content
+                  if (layers.isEmpty || currentImage.bytes.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No image to save')),
+                    );
+                    return;
+                  }
 
-    try {
-      if (widget.outputFormat == o.OutputFormat.json) {
-        var json = layers.map((e) => e.toJson()).toList();
-        loadingScreen.hide();
-        if (mounted) Navigator.pop(context, json);
-      } else {
-        var editedImageBytes = await getMergedImage(widget.outputFormat);
-        loadingScreen.hide();
+                  setState(() {});
+                  var loadingScreen = showLoadingScreen(context);
 
-        if (mounted && editedImageBytes != null) {
-          Navigator.pop(context, editedImageBytes);
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to process image')),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      loadingScreen.hide();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  },
-),
+                  try {
+                    if (widget.outputFormat == o.OutputFormat.json) {
+                      var json = layers.map((e) => e.toJson()).toList();
+                      loadingScreen.hide();
+                      if (mounted) Navigator.pop(context, json);
+                    } else {
+                      var editedImageBytes = await getMergedImage(
+                        widget.outputFormat,
+                      );
+                      loadingScreen.hide();
+
+                      if (mounted && editedImageBytes != null) {
+                        Navigator.pop(context, editedImageBytes);
+                      } else {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to process image'),
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    loadingScreen.hide();
+                    if (mounted) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    }
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -624,37 +633,35 @@ void dispose() {
   }
 
   @override
-void initState() {
-  super.initState();
-  
-  // Initialize layers if empty
-  if (layers.isEmpty) {
-    layers = [];
-    undoLayers = [];
-    removedLayers = [];
-  }
-  
-  if (widget.image != null) {
-    loadImage(widget.image!);
+  void initState() {
+    super.initState();
+
+    // Initialize layers if empty
+    if (layers.isEmpty) {
+      layers = [];
+      undoLayers = [];
+      removedLayers = [];
+    }
+
+    if (widget.image != null) {
+      loadImage(widget.image!);
+    }
+
+    checkPermissions();
   }
 
-  checkPermissions();
-}
+  void ensureBackgroundLayer() {
+    // Check if there's a background layer
+    bool hasBackground = layers.any((layer) => layer is BackgroundLayerData);
 
-void ensureBackgroundLayer() {
-  // Check if there's a background layer
-  bool hasBackground = layers.any((layer) => 
-    layer is BackgroundLayerData
-  );
-  
-  // If no background and we have an image, create one
-  if (!hasBackground && currentImage.bytes.isNotEmpty) {
-    layers.insert(0, BackgroundLayerData(image: currentImage));
-    if (mounted) {
-      setState(() {});
+    // If no background and we have an image, create one
+    if (!hasBackground && currentImage.bytes.isNotEmpty) {
+      layers.insert(0, BackgroundLayerData(image: currentImage));
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
-}
 
   double flipValue = 0;
   int rotateValue = 0;
@@ -673,56 +680,57 @@ void ensureBackgroundLayer() {
     setState(() {});
   }
 
- Future<Uint8List?> getMergedImage([
-  o.OutputFormat format = o.OutputFormat.png,
-]) async {
-  Uint8List? image;
+  Future<Uint8List?> getMergedImage([
+    o.OutputFormat format = o.OutputFormat.png,
+  ]) async {
+    Uint8List? image;
 
-  // Check if we have layers
-  if (layers.isEmpty) {
-    // Fallback to current image
-    return currentImage.bytes.isNotEmpty ? currentImage.bytes : null;
-  }
-
-  // If only background layer and no transformations, return original
-  if (flipValue == 0 && rotateValue == 0 && layers.length == 1) {
-    if (layers.first is BackgroundLayerData) {
-      image = (layers.first as BackgroundLayerData).image.bytes;
-    } else if (layers.first is ImageLayerData) {
-      image = (layers.first as ImageLayerData).image.bytes;
+    // Check if we have layers
+    if (layers.isEmpty) {
+      // Fallback to current image
+      return currentImage.bytes.isNotEmpty ? currentImage.bytes : null;
     }
-  } else {
-    // Capture screenshot for multiple layers or transformations
-    try {
-      image = await screenshotController.capture(pixelRatio: pixelRatio);
-    } catch (e) {
-      print('Screenshot capture failed: $e');
-      // Fallback to background layer
-      if (layers.isNotEmpty && layers.first is BackgroundLayerData) {
+
+    // If only background layer and no transformations, return original
+    if (flipValue == 0 && rotateValue == 0 && layers.length == 1) {
+      if (layers.first is BackgroundLayerData) {
         image = (layers.first as BackgroundLayerData).image.bytes;
-      } else {
-        image = currentImage.bytes;
+      } else if (layers.first is ImageLayerData) {
+        image = (layers.first as ImageLayerData).image.bytes;
+      }
+    } else {
+      // Capture screenshot for multiple layers or transformations
+      try {
+        image = await screenshotController.capture(pixelRatio: pixelRatio);
+      } catch (e) {
+        print('Screenshot capture failed: $e');
+        // Fallback to background layer
+        if (layers.isNotEmpty && layers.first is BackgroundLayerData) {
+          image = (layers.first as BackgroundLayerData).image.bytes;
+        } else {
+          image = currentImage.bytes;
+        }
       }
     }
-  }
 
-  // Convert to JPEG if needed
-  if (image != null && format == o.OutputFormat.jpeg) {
-    var decodedImage = img.decodeImage(image);
-    if (decodedImage == null) {
-      throw Exception('Unable to decode image for conversion.');
+    // Convert to JPEG if needed
+    if (image != null && format == o.OutputFormat.jpeg) {
+      var decodedImage = img.decodeImage(image);
+      if (decodedImage == null) {
+        throw Exception('Unable to decode image for conversion.');
+      }
+      return img.encodeJpg(decodedImage);
     }
-    return img.encodeJpg(decodedImage);
+
+    return image;
   }
 
-  return image;
-}
   @override
   Widget build(BuildContext context) {
     viewportSize = MediaQuery.of(context).size;
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
-// CRITICAL: Ensure background layer always exists
-  ensureBackgroundLayer();
+    // CRITICAL: Ensure background layer always exists
+    ensureBackgroundLayer();
     return Theme(
       data: ImageEditor.theme,
       child: Scaffold(
@@ -1323,22 +1331,22 @@ void ensureBackgroundLayer() {
   final picker = ImagePicker();
 
   Future<void> loadImage(dynamic imageFile) async {
-  // Clear existing layers FIRST
-  layers.clear();
-  undoLayers.clear();
-  removedLayers.clear();
-  
-  // Load the image
-  await currentImage.load(imageFile);
+    // Clear existing layers FIRST
+    layers.clear();
+    undoLayers.clear();
+    removedLayers.clear();
 
-  // CRITICAL: Always create background layer immediately
-  layers.add(BackgroundLayerData(image: currentImage));
+    // Load the image
+    await currentImage.load(imageFile);
 
-  // Force UI update
-  if (mounted) {
-    setState(() {});
+    // CRITICAL: Always create background layer immediately
+    layers.add(BackgroundLayerData(image: currentImage));
+
+    // Force UI update
+    if (mounted) {
+      setState(() {});
+    }
   }
-}
 }
 
 /// Button used in bottomNavigationBar in ImageEditor
@@ -1395,7 +1403,7 @@ class ImageCropper extends StatefulWidget {
   });
 
   @override
-  createState() => _ImageCropperState();
+  _ImageCropperState createState() => _ImageCropperState();
 }
 
 class _ImageCropperState extends State<ImageCropper> {
@@ -1582,7 +1590,7 @@ class ImageFilters extends StatefulWidget {
   });
 
   @override
-  createState() => _ImageFiltersState();
+  _ImageFiltersState createState() => _ImageFiltersState();
 }
 
 class _ImageFiltersState extends State<ImageFilters> {
@@ -1745,7 +1753,7 @@ class FilterAppliedImage extends StatefulWidget {
 
 class _FilterAppliedImageState extends State<FilterAppliedImage> {
   @override
-  initState() {
+  void initState() {
     super.initState();
 
     if (widget.onProcess != null) {
@@ -1840,7 +1848,7 @@ class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
   Color currentBackgroundColor = Colors.black;
 
   final control = HandSignatureControl(
-    initialSetup: SignaturePathSetup(
+    initialSetup: const SignaturePathSetup(
       threshold: 3.0,
       smoothRatio: 0.65,
       velocityRange: 2.0,
