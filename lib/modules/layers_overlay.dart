@@ -19,7 +19,7 @@ class ManageLayersOverlay extends StatefulWidget {
   });
 
   @override
-  _ManageLayersOverlayState createState() => _ManageLayersOverlayState();
+  State<ManageLayersOverlay> createState() => _ManageLayersOverlayState();
 }
 
 class _ManageLayersOverlayState extends State<ManageLayersOverlay> {

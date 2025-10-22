@@ -177,7 +177,7 @@ class MultiImageEditor extends StatefulWidget {
   });
 
   @override
-  _MultiImageEditorState createState() => _MultiImageEditorState();
+  State<MultiImageEditor> createState() => _MultiImageEditorState();
 }
 
 class _MultiImageEditorState extends State<MultiImageEditor> {
@@ -436,7 +436,7 @@ class SingleImageEditor extends StatefulWidget {
   });
 
   @override
-  _SingleImageEditorState createState() => _SingleImageEditorState();
+  State<SingleImageEditor> createState() => _SingleImageEditorState();
 }
 
 class _SingleImageEditorState extends State<SingleImageEditor> {
@@ -703,7 +703,6 @@ class _SingleImageEditorState extends State<SingleImageEditor> {
       try {
         image = await screenshotController.capture(pixelRatio: pixelRatio);
       } catch (e) {
-        print('Screenshot capture failed: $e');
         // Fallback to background layer
         if (layers.isNotEmpty && layers.first is BackgroundLayerData) {
           image = (layers.first as BackgroundLayerData).image.bytes;
@@ -1403,7 +1402,7 @@ class ImageCropper extends StatefulWidget {
   });
 
   @override
-  _ImageCropperState createState() => _ImageCropperState();
+  State<ImageCropper> createState() => _ImageCropperState();
 }
 
 class _ImageCropperState extends State<ImageCropper> {
@@ -1590,7 +1589,7 @@ class ImageFilters extends StatefulWidget {
   });
 
   @override
-  _ImageFiltersState createState() => _ImageFiltersState();
+  State<ImageFilters> createState() => _ImageFiltersState();
 }
 
 class _ImageFiltersState extends State<ImageFilters> {

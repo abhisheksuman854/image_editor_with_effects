@@ -16,7 +16,7 @@ class LinkLayerOverlay extends StatefulWidget {
   });
 
   @override
-  _LinkLayerOverlayState createState() => _LinkLayerOverlayState();
+  State<LinkLayerOverlay> createState() => _LinkLayerOverlayState();
 }
 
 class _LinkLayerOverlayState extends State<LinkLayerOverlay> {

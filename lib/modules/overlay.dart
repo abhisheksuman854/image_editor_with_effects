@@ -6,7 +6,6 @@ import 'package:image_editor_with_effects/data/overlay_layer.dart';
 import 'package:image_editor_with_effects/data/image_item.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 class OverlayEditorImage extends StatefulWidget {
   const OverlayEditorImage({super.key});
 

@@ -3,7 +3,6 @@ import 'package:image_editor_with_effects/data/layer.dart';
 import 'package:image_editor_with_effects/image_editor_with_effects.dart';
 import 'package:image_editor_with_effects/modules/link_layer_overlay.dart';
 
-
 /// Link layer
 class LinkLayer extends StatefulWidget {
   final LinkLayerData layerData;
@@ -18,10 +17,10 @@ class LinkLayer extends StatefulWidget {
   });
 
   @override
-  _TextViewState createState() => _TextViewState();
+  State<LinkLayer> createState() => _LinkLayerState();
 }
 
-class _TextViewState extends State<LinkLayer> {
+class _LinkLayerState extends State<LinkLayer> {
   double initialSize = 0;
   double initialRotation = 0;
   Offset initialFocalPoint = Offset.zero;
