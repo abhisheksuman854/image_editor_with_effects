@@ -3,6 +3,7 @@ import 'package:image_editor_with_effects/data/layer.dart';
 import 'package:image_editor_with_effects/image_editor_with_effects.dart';
 import 'package:image_editor_with_effects/modules/link_layer_overlay.dart';
 
+
 /// Link layer
 class LinkLayer extends StatefulWidget {
   final LinkLayerData layerData;
@@ -15,18 +16,22 @@ class LinkLayer extends StatefulWidget {
     this.editable = false,
     this.onUpdate,
   });
+
   @override
-  createState() => _TextViewState();
+  _TextViewState createState() => _TextViewState();
 }
 
 class _TextViewState extends State<LinkLayer> {
   double initialSize = 0;
   double initialRotation = 0;
+  Offset initialFocalPoint = Offset.zero;
 
   @override
   Widget build(BuildContext context) {
-    initialSize = widget.layerData.size;
-    initialRotation = widget.layerData.rotation;
+    // Get screen/canvas dimensions
+    final screenSize = MediaQuery.of(context).size;
+    final maxWidth = screenSize.width;
+    final maxHeight = screenSize.height;
 
     return Positioned(
       left: widget.layerData.offset.dx,
@@ -56,26 +61,47 @@ class _TextViewState extends State<LinkLayer> {
                 );
               }
             : null,
+        onScaleStart: widget.editable
+            ? (details) {
+                initialSize = widget.layerData.size;
+                initialRotation = widget.layerData.rotation;
+                initialFocalPoint = details.focalPoint;
+              }
+            : null,
         onScaleUpdate: widget.editable
             ? (detail) {
                 if (detail.pointerCount == 1) {
-                  widget.layerData.offset = Offset(
-                    widget.layerData.offset.dx + detail.focalPointDelta.dx,
-                    widget.layerData.offset.dy + detail.focalPointDelta.dy,
-                  );
-                } else if (detail.pointerCount == 2) {
-                  widget.layerData.size =
-                      initialSize + detail.scale * (detail.scale > 1 ? 1 : -1);
+                  // Move with boundary constraints
+                  double newX =
+                      widget.layerData.offset.dx + detail.focalPointDelta.dx;
+                  double newY =
+                      widget.layerData.offset.dy + detail.focalPointDelta.dy;
 
-                  // print('angle');
-                  // print(detail.rotation);
-                  widget.layerData.rotation = detail.rotation;
+                  // Constrain within bounds (with some padding for the layer size)
+                  final padding =
+                      widget.layerData.size + 64; // 64 is the container padding
+                  newX = newX.clamp(-padding, maxWidth - padding);
+                  newY = newY.clamp(-padding, maxHeight - padding);
+
+                  widget.layerData.offset = Offset(newX, newY);
+                } else if (detail.pointerCount == 2) {
+                  // Scale (smooth zoom)
+                  widget.layerData.size = (initialSize * detail.scale).clamp(
+                    10.0,
+                    200.0,
+                  );
+
+                  // Rotate (smooth rotation)
+                  widget.layerData.rotation = initialRotation + detail.rotation;
                 }
+
+                if (widget.onUpdate != null) widget.onUpdate!();
                 setState(() {});
               }
             : null,
         child: Transform.rotate(
           angle: widget.layerData.rotation,
+          alignment: Alignment.center,
           child: Container(
             padding: const EdgeInsets.all(64),
             child: Container(
@@ -87,6 +113,7 @@ class _TextViewState extends State<LinkLayer> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Transform.rotate(
                     angle: -0.4,

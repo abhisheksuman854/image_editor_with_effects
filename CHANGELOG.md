@@ -1,3 +1,7 @@
+## 0.0.6
+
+* UI enhancements
+
 ## 0.0.5
 
 * Added Enhanced Text Layer

@@ -16,7 +16,7 @@ class LinkLayerOverlay extends StatefulWidget {
   });
 
   @override
-  createState() => _LinkLayerOverlayState();
+  _LinkLayerOverlayState createState() => _LinkLayerOverlayState();
 }
 
 class _LinkLayerOverlayState extends State<LinkLayerOverlay> {
@@ -25,7 +25,8 @@ class _LinkLayerOverlayState extends State<LinkLayerOverlay> {
   @override
   void initState() {
     //  slider = widget.sizevalue;
-
+    // Ensure size is within valid range
+    widget.layer.size = widget.layer.size.clamp(0.0, 100.0);
     super.initState();
   }
 
@@ -61,7 +62,10 @@ class _LinkLayerOverlayState extends State<LinkLayerOverlay> {
                     Expanded(
                       child: Slider(
                         thumbColor: Colors.white,
-                        value: widget.layer.size,
+                        value: widget.layer.size.clamp(
+                          0.0,
+                          100.0,
+                        ), // Clamp the value
                         min: 0.0,
                         max: 100.0,
                         onChangeEnd: (v) {
@@ -73,7 +77,6 @@ class _LinkLayerOverlayState extends State<LinkLayerOverlay> {
                         onChanged: (v) {
                           setState(() {
                             slider = v;
-                            // print(v.toDouble());
                             widget.layer.size = v.toDouble();
                             widget.onUpdate();
                           });
