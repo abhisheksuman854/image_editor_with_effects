@@ -834,7 +834,7 @@ void ensureBackgroundLayer() {
                           backgroundColor: Colors.transparent,
                           builder: (context) => SafeArea(
                             child: ManageLayersOverlay(
-                              layers: layers.toSet().toList(),
+                              layers: layers,
                               onUpdate: () => setState(() {}),
                             ),
                           ),
